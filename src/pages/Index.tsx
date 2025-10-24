@@ -26,6 +26,12 @@ import { PriceAlerts } from '@/components/trading/PriceAlerts';
 import { RiskCalculator } from '@/components/trading/RiskCalculator';
 import { EconomicCalendar } from '@/components/trading/EconomicCalendar';
 import { MarketSentiment } from '@/components/trading/MarketSentiment';
+import { PortfolioTracker } from '@/components/trading/PortfolioTracker';
+import { MarketScanner } from '@/components/trading/MarketScanner';
+import { OrderPanel } from '@/components/trading/OrderPanel';
+import { LiquidityZones } from '@/components/trading/LiquidityZones';
+import { HotkeyPanel } from '@/components/trading/HotkeyPanel';
+import { TradeJournal } from '@/components/trading/TradeJournal';
 import { Exchange, DataSource, IndicatorSettings, Timeframe } from '@/types/trading';
 import { getExchangeDefaults } from '@/lib/exchanges';
 import { useTradingData } from '@/hooks/useTradingData';
@@ -237,10 +243,16 @@ const Index = () => {
 
           {/* Right Sidebar */}
           <aside className="glass-panel space-y-4 rounded-2xl p-5 shadow-2xl transition-all duration-300 hover:shadow-primary/10 animate-slide-in-right">
+            <OrderPanel />
+            <PortfolioTracker />
+            <MarketScanner />
             <MarketSentiment />
             <PriceAlerts />
             <RiskCalculator />
+            <LiquidityZones />
             <EconomicCalendar />
+            <HotkeyPanel />
+            <TradeJournal />
             <SwapInterface />
             <CryptoPayment />
             <MarketSummary exchange={exchange} symbol={symbol} />
