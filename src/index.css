@@ -1,0 +1,187 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 222 47% 3%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 40% 5%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 4%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 187 100% 50%;
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 222 30% 12%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 222 25% 18%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 187 100% 50%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 98%;
+
+    --border: 222 30% 15%;
+    --input: 222 30% 15%;
+    --ring: 187 100% 50%;
+
+    --radius: 0.75rem;
+
+    --chart-1: 187 100% 50%;
+    --chart-2: 280 80% 60%;
+    --chart-3: 160 84% 39%;
+    --chart-4: 30 90% 55%;
+    --chart-5: 340 80% 55%;
+
+    --glass: 210 40% 98% / 0.03;
+    --glass-strong: 210 40% 98% / 0.06;
+    --glass-border: 187 100% 50% / 0.1;
+    
+    --glow-primary: 187 100% 50% / 0.3;
+    --glow-success: 160 84% 39% / 0.3;
+    --glow-destructive: 0 72% 55% / 0.3;
+    
+    --gradient-primary: linear-gradient(135deg, hsl(187 100% 50% / 0.1), hsl(187 100% 50% / 0.05));
+    --gradient-dark: linear-gradient(180deg, hsl(222 47% 3%), hsl(222 47% 5%));
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    background: radial-gradient(ellipse at top, hsl(222 47% 6%), hsl(222 47% 3%)),
+                radial-gradient(ellipse at bottom, hsl(187 100% 10% / 0.05), transparent);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted) / 0.1);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.3);
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.5);
+  }
+
+  /* Glass effect utility */
+  .glass-panel {
+    background: linear-gradient(135deg, hsl(var(--glass-strong)), hsl(var(--glass)));
+    border: 1px solid hsl(var(--glass-border));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Glow effects */
+  .glow-primary {
+    box-shadow: 0 0 20px hsl(var(--glow-primary)), 
+                0 0 40px hsl(var(--glow-primary)),
+                inset 0 0 20px hsl(var(--glow-primary));
+  }
+
+  .glow-success {
+    box-shadow: 0 0 15px hsl(var(--glow-success));
+  }
+
+  .glow-destructive {
+    box-shadow: 0 0 15px hsl(var(--glow-destructive));
+  }
+
+  /* Animated gradient background */
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .animated-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(187 100% 50% / 0.05),
+      hsl(280 80% 60% / 0.05),
+      hsl(187 100% 50% / 0.05)
+    );
+    background-size: 200% 200%;
+    animation: gradient-shift 10s ease infinite;
+  }
+
+  /* Pulse animation for live data */
+  @keyframes pulse-subtle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  .pulse-live {
+    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Shimmer effect */
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 3s infinite;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--primary) / 0.2),
+      transparent
+    );
+    background-size: 1000px 100%;
+  }
+
+  /* Data update flash */
+  @keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; background: hsl(var(--primary) / 0.1); }
+  }
+
+  .flash-update {
+    animation: flash 0.3s ease-in-out;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
