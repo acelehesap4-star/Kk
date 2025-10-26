@@ -48,20 +48,22 @@ export function Header({
   }, []);
 
   return (
-    <header className="group relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card/60 to-card/30 p-5 shadow-xl backdrop-blur-xl transition-all duration-300 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10">
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+    <header className="group relative flex flex-wrap items-center justify-between gap-5 overflow-hidden rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-card via-card/80 to-card/60 p-6 shadow-2xl shadow-primary/20 backdrop-blur-2xl transition-all duration-500 hover:border-primary/40 hover:shadow-[0_0_60px_rgba(56,189,248,0.3)]">
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/8 via-transparent to-accent/8 opacity-0 transition-opacity duration-700 group-hover:opacity-100" />
+      <div className="absolute -top-24 -left-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
+      <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent/10 rounded-full blur-3xl" />
       
       <div className="relative z-10">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 shadow-lg shadow-primary/20 ring-2 ring-primary/20">
-            <div className="h-5 w-5 rounded bg-gradient-to-br from-primary to-primary/60" />
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 shadow-2xl shadow-primary/30 ring-2 ring-primary/30 backdrop-blur-xl">
+            <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-primary via-primary to-primary/60 animate-pulse shadow-lg shadow-primary/50" />
           </div>
           <div>
-            <h1 className="bg-gradient-to-r from-primary via-primary to-cyan-400 bg-clip-text text-2xl font-black tracking-tight text-transparent">
-              OmniTerminal
+            <h1 className="bg-gradient-to-r from-primary via-cyan-400 to-primary bg-clip-text text-3xl font-black tracking-tighter text-transparent drop-shadow-[0_0_20px_rgba(56,189,248,0.4)]">
+              OMNI TERMINAL
             </h1>
-            <p className="text-xs font-medium text-muted-foreground">
-              Professional Multi-Exchange Terminal
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              Elite Multi-Exchange Trading Platform
             </p>
           </div>
         </div>

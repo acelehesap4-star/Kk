@@ -112,44 +112,48 @@ export function OrderBook({ exchange, symbol, lastPrice }: OrderBookProps) {
     asks.length && bids.length ? (asks[asks.length - 1].price + bids[0].price) / 2 : lastPrice;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-primary animate-breathe" />
-          <h4 className="text-sm font-bold text-foreground uppercase tracking-wide">Order Book</h4>
+        <div className="flex items-center gap-2.5">
+          <div className="h-2.5 w-2.5 rounded-full bg-primary animate-breathe shadow-lg shadow-primary/50" />
+          <h4 className="text-sm font-black text-foreground uppercase tracking-wide">Market Depth</h4>
         </div>
         <div className="flex items-center gap-2">
           <Select value={mode} onValueChange={(v) => setMode(v as 'depth' | 'sim')}>
-            <SelectTrigger className="h-8 w-[110px] text-xs border-primary/20 bg-primary/5 hover:bg-primary/10">
+            <SelectTrigger className="h-9 w-[120px] text-xs font-bold border-primary/25 bg-primary/10 hover:bg-primary/15 rounded-lg">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="depth">🔴 Live</SelectItem>
-              <SelectItem value="sim">📊 Sim</SelectItem>
+              <SelectItem value="depth">🔴 Live Feed</SelectItem>
+              <SelectItem value="sim">📊 Simulated</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {/* Mid Price Display */}
-      <div className="metric-card rounded-xl p-3 text-center">
-        <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
-          Mid Price
-        </div>
-        <div className="font-mono text-lg font-black text-primary glow-text">
-          ${midPrice?.toFixed(2)}
+      {/* Elite Mid Price Display */}
+      <div className="relative overflow-hidden rounded-xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 to-primary/5 p-4 text-center shadow-xl shadow-primary/20 backdrop-blur-xl">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent animate-shimmer" />
+        <div className="relative z-10">
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">
+            Market Mid Price
+          </div>
+          <div className="font-mono text-2xl font-black text-primary drop-shadow-[0_0_10px_rgba(56,189,248,0.5)]">
+            ${midPrice?.toFixed(2)}
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {/* Asks Panel */}
-        <div className="data-panel rounded-xl border-destructive/20 p-3">
+      <div className="grid grid-cols-2 gap-4">
+        {/* Elite Asks Panel */}
+        <div className="relative overflow-hidden rounded-xl border-2 border-destructive/25 bg-gradient-to-br from-destructive/10 to-destructive/5 p-4 backdrop-blur-xl shadow-xl shadow-destructive/15">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-destructive to-transparent opacity-50" />
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-destructive animate-pulse" />
-              <span className="text-[10px] font-bold text-destructive uppercase tracking-wider">Asks</span>
+              <div className="h-2 w-2 rounded-full bg-destructive animate-pulse shadow-lg shadow-destructive/50" />
+              <span className="text-xs font-black text-destructive uppercase tracking-wider">SELL ORDERS</span>
             </div>
-            <span className="text-[9px] font-mono text-muted-foreground">{asks.length} lvl</span>
+            <span className="text-[10px] font-mono font-bold text-muted-foreground">{asks.length} levels</span>
           </div>
           <div className="mb-2 flex justify-between text-[10px] font-semibold text-muted-foreground uppercase">
             <span>Price</span>
@@ -182,14 +186,15 @@ export function OrderBook({ exchange, symbol, lastPrice }: OrderBookProps) {
           </ScrollArea>
         </div>
 
-        {/* Bids Panel */}
-        <div className="data-panel rounded-xl border-success/20 p-3">
+        {/* Elite Bids Panel */}
+        <div className="relative overflow-hidden rounded-xl border-2 border-success/25 bg-gradient-to-br from-success/10 to-success/5 p-4 backdrop-blur-xl shadow-xl shadow-success/15">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-success to-transparent opacity-50" />
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-              <span className="text-[10px] font-bold text-success uppercase tracking-wider">Bids</span>
+              <div className="h-2 w-2 rounded-full bg-success animate-pulse shadow-lg shadow-success/50" />
+              <span className="text-xs font-black text-success uppercase tracking-wider">BUY ORDERS</span>
             </div>
-            <span className="text-[9px] font-mono text-muted-foreground">{bids.length} lvl</span>
+            <span className="text-[10px] font-mono font-bold text-muted-foreground">{bids.length} levels</span>
           </div>
           <div className="mb-2 flex justify-between text-[10px] font-semibold text-muted-foreground uppercase">
             <span>Price</span>

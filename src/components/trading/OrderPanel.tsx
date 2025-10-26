@@ -34,31 +34,37 @@ export const OrderPanel = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-chart-4/10 ring-2 ring-chart-4/30">
-          <ShoppingCart className="w-4 h-4 text-chart-4" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-chart-4/15 ring-2 ring-chart-4/35 shadow-lg shadow-chart-4/20">
+            <ShoppingCart className="w-5 h-5 text-chart-4" />
+          </div>
+          <div>
+            <h3 className="text-sm font-black text-foreground uppercase tracking-wide">Order Execution</h3>
+            <p className="text-[9px] text-muted-foreground font-mono">Elite Trading Interface</p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">Place Order</h3>
-          <p className="text-[10px] text-muted-foreground">Professional Trading Panel</p>
+        <div className="flex items-center gap-1.5">
+          <Zap className="w-3 h-3 text-primary animate-pulse" />
+          <span className="text-[10px] font-mono font-bold text-primary">ACTIVE</span>
         </div>
       </div>
 
       <Tabs value={side} onValueChange={(v) => setSide(v as 'buy' | 'sell')}>
-        <TabsList className="grid w-full grid-cols-2 p-1 bg-muted/30 backdrop-blur-xl">
+        <TabsList className="grid w-full grid-cols-2 p-1.5 bg-muted/40 backdrop-blur-2xl rounded-xl border border-border/40">
           <TabsTrigger 
             value="buy" 
-            className="data-[state=active]:bg-success/20 data-[state=active]:text-success data-[state=active]:shadow-lg data-[state=active]:shadow-success/20 font-bold transition-all"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-success/30 data-[state=active]:to-success/20 data-[state=active]:text-success data-[state=active]:shadow-2xl data-[state=active]:shadow-success/30 data-[state=active]:ring-2 data-[state=active]:ring-success/40 font-black text-xs transition-all duration-300 rounded-lg"
           >
-            <TrendingUp className="w-4 h-4 mr-1.5" />
-            Buy Long
+            <TrendingUp className="w-4 h-4 mr-2" />
+            BUY LONG
           </TabsTrigger>
           <TabsTrigger 
             value="sell" 
-            className="data-[state=active]:bg-destructive/20 data-[state=active]:text-destructive data-[state=active]:shadow-lg data-[state=active]:shadow-destructive/20 font-bold transition-all"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-destructive/30 data-[state=active]:to-destructive/20 data-[state=active]:text-destructive data-[state=active]:shadow-2xl data-[state=active]:shadow-destructive/30 data-[state=active]:ring-2 data-[state=active]:ring-destructive/40 font-black text-xs transition-all duration-300 rounded-lg"
           >
-            <TrendingDown className="w-4 h-4 mr-1.5" />
-            Sell Short
+            <TrendingDown className="w-4 h-4 mr-2" />
+            SELL SHORT
           </TabsTrigger>
         </TabsList>
 
@@ -210,27 +216,29 @@ export const OrderPanel = () => {
             </div>
           </div>
 
-          {/* Enhanced Place Order Button */}
+          {/* Ultra-Elite Execution Button */}
           <Button
             onClick={placeOrder}
-            className={`w-full h-12 font-black text-base uppercase tracking-wider transition-all hover:scale-[1.02] ${
+            className={`relative w-full h-14 font-black text-base uppercase tracking-widest transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] overflow-hidden rounded-xl ${
               side === 'buy'
-                ? 'bg-gradient-to-r from-success to-success/80 hover:from-success/90 hover:to-success/70 text-white shadow-lg shadow-success/30 hover:shadow-xl hover:shadow-success/40'
-                : 'bg-gradient-to-r from-destructive to-destructive/80 hover:from-destructive/90 hover:to-destructive/70 text-white shadow-lg shadow-destructive/30 hover:shadow-xl hover:shadow-destructive/40'
+                ? 'bg-gradient-to-r from-success via-success to-success/80 hover:from-success/90 hover:to-success/70 text-white shadow-2xl shadow-success/40 hover:shadow-[0_0_50px_rgba(16,185,129,0.5)] ring-2 ring-success/50'
+                : 'bg-gradient-to-r from-destructive via-destructive to-destructive/80 hover:from-destructive/90 hover:to-destructive/70 text-white shadow-2xl shadow-destructive/40 hover:shadow-[0_0_50px_rgba(239,68,68,0.5)] ring-2 ring-destructive/50'
             }`}
           >
-            <div className="flex items-center gap-2">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+            <div className="relative z-10 flex items-center justify-center gap-3">
               {side === 'buy' ? (
                 <>
-                  <TrendingUp className="w-5 h-5" />
-                  Execute Buy {orderType.toUpperCase()}
+                  <TrendingUp className="w-6 h-6" />
+                  <span>EXECUTE BUY {orderType.toUpperCase()}</span>
                 </>
               ) : (
                 <>
-                  <TrendingDown className="w-5 h-5" />
-                  Execute Sell {orderType.toUpperCase()}
+                  <TrendingDown className="w-6 h-6" />
+                  <span>EXECUTE SELL {orderType.toUpperCase()}</span>
                 </>
               )}
+              <Zap className="w-5 h-5 animate-pulse" />
             </div>
           </Button>
         </TabsContent>

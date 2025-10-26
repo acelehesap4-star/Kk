@@ -338,75 +338,80 @@ export function Chart({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="glass-panel-neon hover-lift rounded-2xl p-5 relative overflow-hidden">
-        {/* Decorative Elements */}
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-accent/5 rounded-full blur-3xl" />
+    <div className="space-y-5">
+      <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-card via-card/80 to-card/60 p-6 shadow-2xl shadow-primary/10 backdrop-blur-2xl hover:shadow-3xl hover:shadow-primary/15 transition-all duration-500">
+        {/* Ultra Decorative Elements */}
+        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-60" />
+        <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary/8 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-accent/8 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         
         <div className="relative z-10">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-5 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 ring-2 ring-primary/30">
-                <div className="h-4 w-4 rounded bg-gradient-to-br from-primary to-primary/60" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 ring-2 ring-primary/40 shadow-lg shadow-primary/25">
+                <div className="h-5 w-5 rounded-lg bg-gradient-to-br from-primary via-primary to-primary/60 animate-pulse" />
               </div>
-              <h3 className="font-mono text-base font-black text-foreground tracking-tight">
-                {symbol.toUpperCase()} <span className="text-muted-foreground">/</span> USDT
-              </h3>
-              <div className="status-dot bg-success" />
+              <div>
+                <h3 className="font-mono text-lg font-black text-foreground tracking-tight flex items-center gap-2">
+                  {symbol.toUpperCase()} <span className="text-primary/50 text-base">/</span> USDT
+                  <div className="status-dot bg-success shadow-lg shadow-success/40" />
+                </h3>
+                <p className="text-[10px] text-muted-foreground font-mono font-medium uppercase tracking-wider">Live Trading Chart</p>
+              </div>
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsFullscreen(!isFullscreen)}
-              className="h-9 w-9 rounded-lg hover:bg-primary/10 hover:text-primary transition-all"
+              className="h-10 w-10 rounded-xl hover:bg-primary/15 hover:text-primary hover:ring-2 hover:ring-primary/30 transition-all duration-300"
             >
               {isFullscreen ? (
-                <Minimize2 className="h-4 w-4" />
+                <Minimize2 className="h-5 w-5" />
               ) : (
-                <Maximize2 className="h-4 w-4" />
+                <Maximize2 className="h-5 w-5" />
               )}
             </Button>
           </div>
           
-          <div className="rounded-xl overflow-hidden border border-border/50 bg-background/20">
+          <div className="rounded-2xl overflow-hidden border-2 border-border/40 bg-background/30 shadow-inner shadow-black/20 backdrop-blur-sm">
             <ReactApexChart
               options={candlestickOptions}
               series={candlestickSeries}
               type="candlestick"
-              height={isFullscreen ? 600 : 400}
+              height={isFullscreen ? 600 : 440}
             />
           </div>
         </div>
       </div>
 
       {showRSI && (
-        <div className="glass-panel-strong animate-fade-in-up hover-lift rounded-2xl p-4 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-chart-2 to-transparent opacity-30" />
-          <div className="mb-3 flex items-center gap-2">
-            <div className="h-1 w-1 rounded-full bg-chart-2 animate-breathe" />
-            <div className="text-xs font-bold text-foreground uppercase tracking-wider">
-              RSI Oscillator <span className="text-muted-foreground">({rsiPeriod})</span>
+        <div className="relative overflow-hidden rounded-2xl border border-chart-2/25 bg-gradient-to-br from-card to-card/70 p-5 shadow-xl shadow-chart-2/10 backdrop-blur-xl animate-fade-in-up hover:shadow-2xl hover:shadow-chart-2/15 transition-all duration-500">
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-chart-2 to-transparent opacity-40" />
+          <div className="absolute -top-16 -right-16 w-40 h-40 bg-chart-2/8 rounded-full blur-3xl" />
+          <div className="mb-4 flex items-center gap-2.5">
+            <div className="h-2 w-2 rounded-full bg-chart-2 animate-breathe shadow-lg shadow-chart-2/40" />
+            <div className="text-xs font-black text-foreground uppercase tracking-wider flex items-center gap-2">
+              RSI Oscillator <span className="text-chart-2 font-mono">({rsiPeriod})</span>
             </div>
           </div>
-          <div className="rounded-lg overflow-hidden border border-border/30 bg-background/10">
-            <ReactApexChart options={rsiOptions} series={rsiSeries} type="line" height={130} />
+          <div className="rounded-xl overflow-hidden border-2 border-border/30 bg-background/20 shadow-inner shadow-black/15">
+            <ReactApexChart options={rsiOptions} series={rsiSeries} type="line" height={140} />
           </div>
         </div>
       )}
 
       {showMACD && (
-        <div className="glass-panel-strong animate-fade-in-up hover-lift rounded-2xl p-4 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-chart-1 to-transparent opacity-30" />
-          <div className="mb-3 flex items-center gap-2">
-            <div className="h-1 w-1 rounded-full bg-chart-1 animate-breathe" />
-            <div className="text-xs font-bold text-foreground uppercase tracking-wider">
+        <div className="relative overflow-hidden rounded-2xl border border-chart-1/25 bg-gradient-to-br from-card to-card/70 p-5 shadow-xl shadow-chart-1/10 backdrop-blur-xl animate-fade-in-up hover:shadow-2xl hover:shadow-chart-1/15 transition-all duration-500">
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-chart-1 to-transparent opacity-40" />
+          <div className="absolute -top-16 -right-16 w-40 h-40 bg-chart-1/8 rounded-full blur-3xl" />
+          <div className="mb-4 flex items-center gap-2.5">
+            <div className="h-2 w-2 rounded-full bg-chart-1 animate-breathe shadow-lg shadow-chart-1/40" />
+            <div className="text-xs font-black text-foreground uppercase tracking-wider">
               MACD Indicator
             </div>
           </div>
-          <div className="rounded-lg overflow-hidden border border-border/30 bg-background/10">
-            <ReactApexChart options={macdOptions} series={macdSeries} type="line" height={150} />
+          <div className="rounded-xl overflow-hidden border-2 border-border/30 bg-background/20 shadow-inner shadow-black/15">
+            <ReactApexChart options={macdOptions} series={macdSeries} type="line" height={160} />
           </div>
         </div>
       )}
