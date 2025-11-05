@@ -1,10 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Navbar } from '@/components/navigation/Navbar';
 import { Header } from '@/components/trading/Header';
 import { ParticleBackground } from '@/components/effects/ParticleBackground';
-import { AdminPanel } from '@/components/admin/AdminPanel';
 import { LeftSidebar } from '@/components/sidebars/LeftSidebar';
 import { RightSidebar } from '@/components/sidebars/RightSidebar';
 import { MainChartArea } from '@/components/chart/MainChartArea';
@@ -13,6 +12,9 @@ import { getExchangeDefaults } from '@/lib/exchanges';
 import { useTradingData } from '@/hooks/useTradingData';
 import { detectCandlestickPatterns } from '@/lib/indicators';
 import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const AdminPanel = lazy(() => import('@/components/admin/AdminPanel').then(m => ({ default: m.AdminPanel })));
 
 const Index = () => {
   const navigate = useNavigate();
@@ -157,7 +159,9 @@ const Index = () => {
           <ParticleBackground />
           <div className="relative z-10 mx-auto max-w-[1800px] space-y-4">
             <div className="glass-panel-strong rounded-2xl p-6 animate-scale-in">
-              <AdminPanel />
+              <Suspense fallback={<Skeleton className="w-full h-screen" />}>
+                <AdminPanel />
+              </Suspense>
             </div>
           </div>
         </div>

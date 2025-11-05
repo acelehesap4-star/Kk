@@ -1,12 +1,14 @@
-import { memo } from 'react';
-import { RealHeatmap } from '@/components/trading/RealHeatmap';
+import { memo, Suspense, lazy } from 'react';
 import { PriceDisplay } from '@/components/trading/PriceDisplay';
 import { OptimizedChart } from '@/components/trading/OptimizedChart';
 import { VolumeChart } from '@/components/trading/VolumeChart';
-import { DepthChart } from '@/components/trading/DepthChart';
 import { TradeFeed } from '@/components/trading/TradeFeed';
 import { OrderBook } from '@/components/trading/OrderBook';
 import { Exchange, IndicatorSettings, Candle, Trade } from '@/types/trading';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const RealHeatmap = lazy(() => import('@/components/trading/RealHeatmap').then(m => ({ default: m.RealHeatmap })));
+const DepthChart = lazy(() => import('@/components/trading/DepthChart').then(m => ({ default: m.DepthChart })));
 
 interface MainChartAreaProps {
   symbol: string;
@@ -31,7 +33,9 @@ export const MainChartArea = memo(({
 }: MainChartAreaProps) => {
   return (
     <main className="glass-panel space-y-4 rounded-2xl p-5 shadow-2xl animate-scale-in gradient-glow">
-      <RealHeatmap />
+      <Suspense fallback={<Skeleton className="h-32 w-full" />}>
+        <RealHeatmap />
+      </Suspense>
       
       <PriceDisplay
         symbol={symbol}
@@ -61,7 +65,9 @@ export const MainChartArea = memo(({
         }))}
       />
 
-      <DepthChart exchange={exchange} symbol={symbol} />
+      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+        <DepthChart exchange={exchange} symbol={symbol} />
+      </Suspense>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <TradeFeed trades={trades} />
