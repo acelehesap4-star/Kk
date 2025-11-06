@@ -1,11 +1,12 @@
 import { createBrowserRouter } from 'react-router-dom';
 import App from './App';
+import { Fragment } from 'react';
 
 const router = createBrowserRouter(
   [
     {
       path: '/*',
-      element: <App />,
+      element: <Fragment><App /></Fragment>,
     },
   ],
   {
