@@ -118,37 +118,69 @@ const RealTradingTerminal: React.FC<RealTradingTerminalProps> = ({ user }) => {
     { id: 3, symbol: 'SOL/USDT', type: 'buy', amount: 10.0, price: 145.00, status: 'filled', time: '08:45:10' }
   ]);
 
-  const [balance] = useState({
-    USDT: 15420.50,
-    BTC: 0.5,
-    ETH: 2.0,
-    SOL: 10.0,
-    total: 25847.32
-  });
+  const [balances, setBalances] = useState<Record<string, number>>({});
+  
+  useEffect(() => {
+    const fetchBalances = async () => {
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('real_balances')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('exchange', exchange);
+        
+        if (error) throw error;
+
+        const formattedBalances = data.reduce((acc, balance) => {
+          acc[balance.asset] = balance.total_balance;
+          return acc;
+        }, {} as Record<string, number>);
+
+        setBalances(formattedBalances);
+      } catch (error) {
+        console.error('Error fetching balances:', error);
+        toast.error('Bakiye bilgileri alınamadı');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBalances();
+  }, [user.id, exchange]);
 
   const selectedMarket = marketData.find(m => m.symbol === selectedPair) || marketData[0];
 
   const handleTrade = async () => {
     if (!amount || (orderType === 'limit' && !price)) {
-      toast.error('Please fill in all required fields');
+      toast.error('Lütfen tüm alanları doldurun');
       return;
     }
 
     setIsLoading(true);
     
     try {
-      // Simulate API call to exchange
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const parsedAmount = parseFloat(amount);
+      const parsedPrice = orderType === 'limit' ? parseFloat(price) : undefined;
       
-      const newOrder = {
-        id: Date.now(),
+      // Gerçek emir oluşturma
+      const { data: order, error } = await supabase.rpc('execute_trade', {
+        market_type: marketType,
         symbol: selectedPair,
-        type: tradeType,
-        amount: parseFloat(amount),
-        price: orderType === 'market' ? selectedMarket.price : parseFloat(price),
-        status: 'filled' as const,
-        time: new Date().toLocaleTimeString()
-      };
+        side: tradeType,
+        order_type: orderType,
+        quantity: parsedAmount,
+        price: parsedPrice,
+        exchange: exchange
+      });
+
+      if (error) throw error;
+      
+      toast.success('İşlem başarıyla gerçekleştirildi');
+
+      // Bakiyeleri güncelle
+      fetchBalances();
+      fetchOrders();
       
       setOrderHistory(prev => [newOrder, ...prev]);
       

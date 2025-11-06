@@ -54,11 +54,12 @@ export interface ApiConfig {
   
   // Trading Configuration
   trading: {
-    enableRealTrading: boolean;
-    maxPositionSize: number;
-    maxDailyLoss: number;
-    enableStopLoss: boolean;
-  };
+    enableRealTrading: true,
+    maxPositionSize: 100000,
+    maxDailyLoss: 10000,
+    enableStopLoss: true,
+    enableDemoMode: false,
+  },
   
   // Supabase
   supabase: {

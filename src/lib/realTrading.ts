@@ -9,6 +9,29 @@ import { forexDataProvider } from './forexApi';
 export const TRADING_MODE = 'REAL';
 export const ENVIRONMENT = 'production';
 
+// API yapılandırmasını gerçek işlemlere göre ayarla
+const API_CONFIG = {
+  trading: {
+    enableRealTrading: true,
+    enableDemoTrading: false,
+    enableBacktesting: false
+  },
+  exchanges: {
+    binance: {
+      useTestnet: false,
+      websocketUrl: 'wss://stream.binance.com:9443/ws',
+      restUrl: 'https://api.binance.com'
+    },
+    oanda: {
+      useDemo: false, 
+      baseUrl: 'https://api-fxtrade.oanda.com/v3'
+    },
+    finnhub: {
+      baseUrl: 'https://finnhub.io/api/v1'
+    }
+  }
+};
+
 export interface RealOrder {
   id: string;
   userId: string;
@@ -60,13 +83,14 @@ export interface TradingAccount {
 
 export class RealTradingEngine {
   private userId: string | null = null;
+  private tradingEnabled = true;
 
   async initialize(userId: string) {
     this.userId = userId;
-    await coldWalletPaymentSystem.initialize(userId);
+    this.tradingEnabled = true; // Gerçek işlem modunu etkinleştir
   }
 
-  async saveCredentials(exchange: string, apiKey: string, apiSecret: string, testnet: boolean = true) {
+  async saveCredentials(exchange: string, apiKey: string, apiSecret: string, isTestnet: boolean = false): Promise<void> {
     if (!this.userId) throw new Error('User not initialized');
 
     const { error } = await supabase
