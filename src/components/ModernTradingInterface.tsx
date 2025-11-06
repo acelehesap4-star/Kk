@@ -389,6 +389,30 @@ const DashboardContent = () => (
 
 // Trading Content Component
 const TradingContent = ({ user }: { user: any }) => {
+  const [marketType, setMarketType] = useState<'crypto' | 'forex' | 'stocks' | 'indices'>('crypto');
+  const [selectedPair, setSelectedPair] = useState('BTC/USDT');
+  const [realBalances, setRealBalances] = useState<Record<string, number>>({});
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchRealBalances = async () => {
+      try {
+        if (!user?.id) return;
+        
+        setIsLoading(true);
+        const response = await fetch('/api/balances/real');
+        const data = await response.json();
+        setRealBalances(data);
+      } catch (error) {
+        console.error('Error fetching real balances:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRealBalances();
+  }, [user?.id]);
+
   const [RealTradingTerminal, setRealTradingTerminal] = useState<React.ComponentType<any> | null>(null);
 
   useEffect(() => {
