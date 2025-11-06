@@ -14,6 +14,10 @@ import { useRealMarketData } from '@/hooks/useRealMarketData';
 import { Watchlist } from './Watchlist';
 import { TradingAlerts } from './TradingAlerts';
 import { MarketAnalysis } from './MarketAnalysis';
+import { CryptoAdvancedTools } from './CryptoAdvancedTools';
+import { ForexAdvancedTools } from './ForexAdvancedTools';
+import { StocksAdvancedTools } from './StocksAdvancedTools';
+import { IndicesAdvancedTools } from './IndicesAdvancedTools';
 import {
   Table,
   TableBody,
