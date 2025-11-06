@@ -13,6 +13,7 @@ export interface ExchangeConfig {
     options: boolean;
     swap: boolean;
   };
+  isActive: boolean;
 }
 
 export const EXCHANGE_CONFIGS: Record<string, ExchangeConfig> = {
@@ -22,6 +23,7 @@ export const EXCHANGE_CONFIGS: Record<string, ExchangeConfig> = {
     type: 'crypto',
     ccxtId: 'binance',
     requiresCredentials: true,
+    isActive: true,
     supportedFeatures: {
       spot: true,
       margin: true,

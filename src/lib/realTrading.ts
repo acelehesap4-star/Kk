@@ -5,6 +5,10 @@ import { binance } from './exchanges/binance';
 import { stocksDataProvider } from './stocksApi';
 import { forexDataProvider } from './forexApi';
 
+// Trading sistemini gerçek moda geçir
+export const TRADING_MODE = 'REAL';
+export const ENVIRONMENT = 'production';
+
 export interface RealOrder {
   id: string;
   userId: string;
