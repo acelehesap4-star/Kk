@@ -3,7 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
+    <script>
+      // Single Page Apps for GitHub Pages
+      // MIT License
+      // https://github.com/rafgraph/spa-github-pages
+      (function(l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search.slice(1).split('&').map(function(s) { 
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+
     <!-- Preconnect to external domains for faster DNS resolution -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,32 +39,11 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    <script type="text/javascript">
-      // Single Page Apps for GitHub Pages
-      // MIT License
-      // https://github.com/rafgraph/spa-github-pages
-      (function(l) {
-        if (l.search[1] === '/' ) {
-          var decoded = l.search.slice(1).split('&').map(function(s) { 
-            return s.replace(/~and~/g, '&')
-          }).join('?');
-          window.history.replaceState(null, null,
-              l.pathname.slice(0, -1) + decoded + l.hash
-          );
-        }
-      }(window.location))</script>
-    <script type="module" crossorigin src="/B/assets/index-Z44vmMRO.js"></script>
-    <link rel="modulepreload" crossorigin href="/B/assets/vendor-other-D47dPwbJ.js">
-    <link rel="modulepreload" crossorigin href="/B/assets/vendor-web3-jO0HOhpF.js">
-    <link rel="modulepreload" crossorigin href="/B/assets/vendor-ui-CttiZxwU.js">
-    <link rel="modulepreload" crossorigin href="/B/assets/vendor-react-tp3X7DEw.js">
-    <link rel="modulepreload" crossorigin href="/B/assets/vendor-animation-MhqGQ3i3.js">
-    <link rel="modulepreload" crossorigin href="/B/assets/ui-components-sFq84wHa.js">
-    <link rel="modulepreload" crossorigin href="/B/assets/trading-components-BSCqJaQ_.js">
-    <link rel="stylesheet" crossorigin href="/B/assets/index-bF2gHCzk.css">
   </head>
 
   <body>
     <div id="root"></div>
+    <script type="module" src="./assets/index-Z44vmMRO.js"></script>
+    <link rel="stylesheet" href="./assets/index-bF2gHCzk.css">
   </body>
 </html>
