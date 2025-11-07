@@ -45,7 +45,7 @@ const router = createBrowserRouter(
     },
   ],
   {
-    basename: '/B',
+    basename: '/Kk',
   }
 );
 
