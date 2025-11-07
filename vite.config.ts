@@ -3,7 +3,11 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
 export default defineConfig({
-  base: "/Kk/",
+  base: '/Kk/',
+  build: {
+    outDir: 'docs',
+    emptyOutDir: true,
+  },
   plugins: [react()],
   resolve: {
     alias: {
