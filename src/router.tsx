@@ -6,7 +6,7 @@ const App = lazy(() => import('./App'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const TradingTerminal = lazy(() => import('./pages/TradingTerminal'));
 const Wallet = lazy(() => import('./pages/Wallet'));
-const AdminPanel = lazy(() => import('./pages/AdminPanel'));
+const AdminPanel = lazy(() => import('./components/admin/AdminPanel'));
 const LegacyTrading = lazy(() => import('./pages/Index'));
 
 const router = createBrowserRouter(
@@ -47,7 +47,7 @@ const router = createBrowserRouter(
       path: '/admin',
       element: (
         <Suspense fallback={<LoadingSpinner />}>
-          <AdminPanel />
+          <AdminPanel user={{ id: '1', email: 'admin@example.com', role: 'admin' }} />
         </Suspense>
       ),
     },

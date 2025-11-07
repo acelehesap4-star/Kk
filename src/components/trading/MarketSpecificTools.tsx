@@ -1,10 +1,9 @@
 import React from 'react';
-import { MarketType } from '@/types/market';
-import { MarketTabs } from '@/components/trading/MarketTabs';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 interface MarketSpecificToolsProps {
-  marketType: MarketType;
-  onMarketChange?: (market: MarketType) => void;
+  marketType: string;
+  onMarketChange?: (market: string) => void;
 }
 
 export const MarketSpecificTools: React.FC<MarketSpecificToolsProps> = ({
@@ -12,11 +11,15 @@ export const MarketSpecificTools: React.FC<MarketSpecificToolsProps> = ({
   onMarketChange
 }) => {
   return (
-    <div className="market-tools">
-      <MarketTabs
-        initialMarketType={marketType}
-        onMarketChange={onMarketChange}
-      />
+    <div className="flex flex-col gap-4 p-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Market Tools</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Market-specific tools will be available soon.</p>
+        </CardContent>
+      </Card>
     </div>
   );
 };

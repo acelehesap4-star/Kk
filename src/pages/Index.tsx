@@ -2,20 +2,18 @@ import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { Navbar } from '@/components/navigation/Navbar';
 import { Header } from '@/components/trading/Header';
 
-import { LeftSidebar } from '@/components/sidebars/LeftSidebar';
-import { RightSidebar } from '@/components/sidebars/RightSidebar';
+import { Sidebar } from '@/components/sidebars/Sidebar';
 import { MainChartArea } from '@/components/chart/MainChartArea';
 import { Exchange, DataSource, IndicatorSettings, Timeframe, AssetType } from '@/types/trading';
 import { getExchangeDefaults } from '@/lib/exchanges';
-import { useTradingData } from '@/hooks/useTradingData';
+import { useTradingData } from '@/hooks/core/useTradingData';
 import { detectCandlestickPatterns } from '@/lib/indicators';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const MemoizedNavbar = memo(Navbar);
 const MemoizedHeader = memo(Header);
-const MemoizedLeftSidebar = memo(LeftSidebar);
-const MemoizedRightSidebar = memo(RightSidebar);
+const MemoizedSidebar = memo(Sidebar);
 const MemoizedMainChartArea = memo(MainChartArea);
 
 const Index = () => {
@@ -154,7 +152,8 @@ const Index = () => {
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-[320px_1fr_320px] lg:grid-cols-[280px_1fr_280px]">
               {/* Left Sidebar */}
               <div className="bg-black/40 backdrop-blur-xl border border-cyan-500/20 rounded-2xl shadow-2xl shadow-cyan-500/10 overflow-hidden">
-                <MemoizedLeftSidebar
+                <MemoizedSidebar
+                  mode="left"
                   symbols={symbols}
                   activeSymbol={symbol}
                   timeframe={timeframe}
@@ -162,7 +161,6 @@ const Index = () => {
                   detectedPatterns={detectedPatterns}
                   candles={candles}
                   lastPrice={lastPrice}
-                  logs={logs}
                   onSymbolClick={handleSymbolChange}
                   onTimeframeChange={setTimeframe}
                   onApplyIndicators={handleApplyIndicators}
@@ -185,15 +183,20 @@ const Index = () => {
 
               {/* Right Sidebar */}
               <div className="bg-black/40 backdrop-blur-xl border border-cyan-500/20 rounded-2xl shadow-2xl shadow-cyan-500/10 overflow-hidden">
-                <MemoizedRightSidebar
-                  symbol={symbol}
+                <MemoizedSidebar
+                  mode="right"
+                  symbols={symbols}
+                  activeSymbol={symbol}
                   exchange={exchange}
-                  currentPrice={lastPrice}
                   assetType={assetType}
-                  onSelectSymbol={(sym, type) => {
-                    setSymbol(sym.toLowerCase());
-                    setAssetType(type);
-                  }}
+                  timeframe={timeframe}
+                  indicatorSettings={indicatorSettings}
+                  detectedPatterns={detectedPatterns}
+                  candles={candles}
+                  lastPrice={lastPrice}
+                  onSymbolClick={handleSymbolChange}
+                  onTimeframeChange={setTimeframe}
+                  onApplyIndicators={handleApplyIndicators}
                 />
               </div>
             </div>

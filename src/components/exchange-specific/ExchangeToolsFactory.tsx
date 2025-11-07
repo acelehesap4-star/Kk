@@ -39,5 +39,4 @@ export function ExchangeToolsFactory({ exchange, symbol, userId, onError }: Exch
       </div>
     );
   }
-  }
 }
