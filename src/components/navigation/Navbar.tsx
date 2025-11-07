@@ -3,8 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Shield, LogIn, LogOut, Menu, X, TrendingUp, Wallet, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { WalletButton } from '@/components/web3/WalletButton';
-import { useAccount } from 'wagmi';
 import { toast } from 'sonner';
 
 interface NavbarProps {
@@ -14,7 +12,6 @@ interface NavbarProps {
 
 export const Navbar = memo(({ onAdminClick, isAdmin }: NavbarProps) => {
   const navigate = useNavigate();
-  const { isConnected } = useAccount();
   const [user, setUser] = useState<any>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -75,8 +72,6 @@ export const Navbar = memo(({ onAdminClick, isAdmin }: NavbarProps) => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
-            {isConnected && <WalletButton />}
-
             {user ? (
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
@@ -137,12 +132,6 @@ export const Navbar = memo(({ onAdminClick, isAdmin }: NavbarProps) => {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden py-4 space-y-3 animate-fade-in">
-            {isConnected && (
-              <div className="flex justify-center">
-                <WalletButton />
-              </div>
-            )}
-
             {user ? (
               <>
                 <div className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">

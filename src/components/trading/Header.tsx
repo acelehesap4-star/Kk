@@ -4,8 +4,6 @@ import { RefreshCw, LogIn } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Exchange, DataSource } from '@/types/trading';
 import { EXCHANGES } from '@/lib/exchanges';
-import { WalletButton } from '@/components/web3/WalletButton';
-import { useAccount } from 'wagmi';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useState } from 'react';
 
@@ -30,7 +28,7 @@ export function Header({
   onSourceChange,
   onRefresh,
 }: HeaderProps) {
-  const { isConnected } = useAccount();
+
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -119,8 +117,6 @@ export function Header({
           <RefreshCw className="h-4 w-4" />
         </Button>
 
-        {isConnected && <WalletButton />}
-        
         {!user && (
           <Link to="/auth">
             <Button size="sm" className="bg-gradient-to-r from-primary to-chart-2">

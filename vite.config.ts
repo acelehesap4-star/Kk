@@ -4,10 +4,6 @@ import path from "path";
 
 export default defineConfig({
   base: '/Kk/',
-  build: {
-    outDir: 'docs',
-    emptyOutDir: true,
-  },
   plugins: [react()],
   resolve: {
     alias: {
@@ -36,13 +32,7 @@ export default defineConfig({
             'framer-motion',
             'lightweight-charts'
           ],
-          'vendor-web3': [
-            'wagmi',
-            '@wagmi/core',
-            'viem',
-            '@wagmi/connectors',
-            'ethers'
-          ],
+
           'vendor-ui': [
             '@radix-ui/react-alert-dialog',
             '@radix-ui/react-dialog',
@@ -104,18 +94,7 @@ export default defineConfig({
             './src/components/admin/AdvancedAdminPanelWrapper',
             './src/components/AdvancedAdminPanel'
           ],
-          'web3-core': [
-            './src/components/web3/WalletButton',
-            './src/components/web3/WalletInfoWrapper'
-          ],
-          'web3-features': [
-            './src/components/web3/CryptoWalletInfo',
-            './src/components/web3/CryptoWalletInfoWrapper'
-          ],
-          'web3-defi': [
-            './src/components/web3/SwapInterface',
-            './src/components/web3/CryptoPayment'
-          ]
+
         },
         entryFileNames: `assets/[name].${Date.now()}.[hash].js`,
         chunkFileNames: `assets/[name].${Date.now()}.[hash].js`,

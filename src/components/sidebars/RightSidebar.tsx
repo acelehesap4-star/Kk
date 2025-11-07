@@ -1,6 +1,4 @@
 import { memo, Suspense, lazy } from 'react';
-import { BuyOmni99 } from '@/components/tokens/BuyOmni99';
-import { WalletButton } from '@/components/web3/WalletButton';
 import { MarketSelector } from '@/components/trading/MarketSelector';
 import { OrderPanel } from '@/components/trading/OrderPanel';
 import { RealOrderPanel } from '@/components/trading/RealOrderPanel';
@@ -10,8 +8,6 @@ import { PriceAlerts } from '@/components/trading/PriceAlerts';
 import { RiskCalculator } from '@/components/trading/RiskCalculator';
 import { LiquidityZones } from '@/components/trading/LiquidityZones';
 import { HotkeyPanel } from '@/components/trading/HotkeyPanel';
-import { SwapInterface } from '@/components/web3/SwapInterface';
-import { CryptoPayment } from '@/components/web3/CryptoPayment';
 import { MarketSummary } from '@/components/trading/MarketSummary';
 import { NewsFeed } from '@/components/trading/NewsFeed';
 import { Exchange, AssetType } from '@/types/trading';
@@ -45,9 +41,6 @@ export const RightSidebar = memo(({
 }: RightSidebarProps) => {
   return (
     <aside className="glass-panel space-y-4 rounded-2xl p-5 shadow-2xl transition-all duration-300 hover:shadow-primary/10 animate-slide-in-right">
-      <BuyOmni99 />
-      <WalletButton />
-      
       <Tabs defaultValue="trading" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="trading">Trading</TabsTrigger>
@@ -60,7 +53,7 @@ export const RightSidebar = memo(({
             selectedSymbol={symbol}
           />
           
-                    <RealOrderPanel exchange={exchange} symbol={symbol} />
+                    <RealOrderPanel exchange={exchange} symbol={symbol} currentPrice={currentPrice} />
           
           <AdvancedOrderTypes />
           
@@ -73,8 +66,6 @@ export const RightSidebar = memo(({
           <LiquidityZones />
           <HotkeyPanel />
           
-          <SwapInterface />
-          <CryptoPayment />
           <MarketSummary exchange={exchange} symbol={symbol} />
         </TabsContent>
         
