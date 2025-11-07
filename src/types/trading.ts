@@ -1,4 +1,4 @@
-export type Exchange = 'BINANCE' | 'OKX' | 'KUCOIN' | 'COINBASE' | 'NASDAQ' | 'NYSE' | 'FOREX' | 'CME';
+export type Exchange = 'BINANCE' | 'OKX' | 'KUCOIN' | 'COINBASE' | 'BYBIT' | 'KRAKEN' | 'HUOBI' | 'GATE' | 'MEXC' | 'BITGET' | 'NASDAQ' | 'NYSE' | 'FOREX' | 'COMMODITIES' | 'CRYPTO_FUTURES';
 export type DataSource = 'ws' | 'rest';
 export type AssetType = 'crypto' | 'stock' | 'forex' | 'commodity' | 'index';
 export type MarketType = 'spot' | 'futures' | 'options' | 'cfd';

@@ -129,57 +129,94 @@ const Index = () => {
   return (
     <>
       <MemoizedNavbar />
-      <div className="relative min-h-screen pt-24 p-4 animate-fade-in">
-        <div className="relative z-10 mx-auto max-w-[1800px] space-y-4">
-          <div className="glass-panel-strong rounded-2xl p-4 neon-border-strong animate-slide-fade-down">
-            <MemoizedHeader
-              exchange={exchange}
-              symbol={symbol}
-              source={source}
-              symbols={symbols}
-              onExchangeChange={handleExchangeChange}
-              onSymbolChange={handleSymbolChange}
-              onSourceChange={handleSourceChange}
-              onRefresh={handleRefresh}
-            />
-          </div>
+      <div className="relative min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-900/20 via-transparent to-transparent"></div>
+        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]"></div>
+        
+        <div className="relative z-10 pt-20 p-4 animate-fade-in">
+          <div className="mx-auto max-w-[2000px] space-y-4">
+            {/* Modern Header */}
+            <div className="bg-black/40 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-4 shadow-2xl shadow-cyan-500/10">
+              <MemoizedHeader
+                exchange={exchange}
+                symbol={symbol}
+                source={source}
+                symbols={symbols}
+                onExchangeChange={handleExchangeChange}
+                onSymbolChange={handleSymbolChange}
+                onSourceChange={handleSourceChange}
+                onRefresh={handleRefresh}
+              />
+            </div>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[380px_1fr_380px]">
-            <MemoizedLeftSidebar
-              symbols={symbols}
-              activeSymbol={symbol}
-              timeframe={timeframe}
-              indicatorSettings={indicatorSettings}
-              detectedPatterns={detectedPatterns}
-              candles={candles}
-              lastPrice={lastPrice}
-              logs={logs}
-              onSymbolClick={handleSymbolChange}
-              onTimeframeChange={setTimeframe}
-              onApplyIndicators={handleApplyIndicators}
-            />
+            {/* Main Trading Layout */}
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[320px_1fr_320px] lg:grid-cols-[280px_1fr_280px]">
+              {/* Left Sidebar */}
+              <div className="bg-black/40 backdrop-blur-xl border border-cyan-500/20 rounded-2xl shadow-2xl shadow-cyan-500/10 overflow-hidden">
+                <MemoizedLeftSidebar
+                  symbols={symbols}
+                  activeSymbol={symbol}
+                  timeframe={timeframe}
+                  indicatorSettings={indicatorSettings}
+                  detectedPatterns={detectedPatterns}
+                  candles={candles}
+                  lastPrice={lastPrice}
+                  logs={logs}
+                  onSymbolClick={handleSymbolChange}
+                  onTimeframeChange={setTimeframe}
+                  onApplyIndicators={handleApplyIndicators}
+                />
+              </div>
 
-            <MemoizedMainChartArea
-              symbol={symbol}
-              exchange={exchange}
-              source={source}
-              candles={candles}
-              trades={trades}
-              lastPrice={lastPrice}
-              previousPrice={previousPrice}
-              indicatorSettings={indicatorSettings}
-            />
+              {/* Main Chart Area */}
+              <div className="bg-black/40 backdrop-blur-xl border border-cyan-500/20 rounded-2xl shadow-2xl shadow-cyan-500/10 overflow-hidden">
+                <MemoizedMainChartArea
+                  symbol={symbol}
+                  exchange={exchange}
+                  source={source}
+                  candles={candles}
+                  trades={trades}
+                  lastPrice={lastPrice}
+                  previousPrice={previousPrice}
+                  indicatorSettings={indicatorSettings}
+                />
+              </div>
 
-            <MemoizedRightSidebar
-              symbol={symbol}
-              exchange={exchange}
-              currentPrice={lastPrice}
-              assetType={assetType}
-              onSelectSymbol={(sym, type) => {
-                setSymbol(sym.toLowerCase());
-                setAssetType(type);
-              }}
-            />
+              {/* Right Sidebar */}
+              <div className="bg-black/40 backdrop-blur-xl border border-cyan-500/20 rounded-2xl shadow-2xl shadow-cyan-500/10 overflow-hidden">
+                <MemoizedRightSidebar
+                  symbol={symbol}
+                  exchange={exchange}
+                  currentPrice={lastPrice}
+                  assetType={assetType}
+                  onSelectSymbol={(sym, type) => {
+                    setSymbol(sym.toLowerCase());
+                    setAssetType(type);
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Bottom Stats Bar */}
+            <div className="bg-black/40 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-4 shadow-2xl shadow-cyan-500/10">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-cyan-400/80">Live Data</span>
+                  </div>
+                  <div className="text-cyan-400/60">
+                    Last Update: {new Date().toLocaleTimeString()}
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 text-cyan-400/60">
+                  <span>Latency: 12ms</span>
+                  <span>•</span>
+                  <span>Connected: {exchange}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
