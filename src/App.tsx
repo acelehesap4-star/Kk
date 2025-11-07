@@ -5,25 +5,22 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TradingProvider } from './context/trading-context';
 import { ThemeProvider } from '@/components/ui/ThemeProvider';
-import AdvancedErrorBoundary from '@/components/ui/AdvancedErrorBoundary';
 
 const queryClient = new QueryClient();
 
 const App = () => {
   return (
-    <AdvancedErrorBoundary>
-      <ThemeProvider defaultTheme="dark" storageKey="trading-ui-theme">
-        <QueryClientProvider client={queryClient}>
-          <TradingProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <Outlet />
-            </TooltipProvider>
-          </TradingProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
-    </AdvancedErrorBoundary>
+    <ThemeProvider defaultTheme="dark" storageKey="trading-ui-theme">
+      <QueryClientProvider client={queryClient}>
+        <TradingProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Outlet />
+          </TooltipProvider>
+        </TradingProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 };
 

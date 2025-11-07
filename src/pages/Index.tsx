@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Navbar } from '@/components/navigation/Navbar';
 import { Header } from '@/components/trading/Header';
-import { ParticleBackground } from '@/components/effects/ParticleBackground';
+
 import { LeftSidebar } from '@/components/sidebars/LeftSidebar';
 import { RightSidebar } from '@/components/sidebars/RightSidebar';
 import { MainChartArea } from '@/components/chart/MainChartArea';
@@ -168,7 +168,6 @@ const Index = () => {
       <>
         <MemoizedNavbar onAdminClick={() => setShowAdminPanel(false)} isAdmin={isAdmin} />
         <div className="relative min-h-screen pt-24 p-4 animate-fade-in">
-          <ParticleBackground />
           <div className="relative z-10 mx-auto max-w-[1800px] space-y-4">
             <div className="glass-panel-strong rounded-2xl p-6 animate-scale-in">
               <Suspense fallback={<Skeleton className="w-full h-screen" />}>
@@ -185,7 +184,6 @@ const Index = () => {
     <>
       <MemoizedNavbar onAdminClick={() => setShowAdminPanel(true)} isAdmin={isAdmin} />
       <div className="relative min-h-screen pt-24 p-4 animate-fade-in">
-        <ParticleBackground />
         <div className="relative z-10 mx-auto max-w-[1800px] space-y-4">
           <div className="glass-panel-strong rounded-2xl p-4 neon-border-strong animate-slide-fade-down">
             <MemoizedHeader

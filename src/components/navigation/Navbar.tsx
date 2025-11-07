@@ -1,9 +1,7 @@
 import { useState, useEffect, memo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Shield, LogIn, LogOut, Menu, X, TrendingUp, Wallet, Settings } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { Shield, Menu, X, TrendingUp, Settings } from 'lucide-react';
 
 interface NavbarProps {
   onAdminClick?: () => void;
@@ -11,8 +9,6 @@ interface NavbarProps {
 }
 
 export const Navbar = memo(({ onAdminClick, isAdmin }: NavbarProps) => {
-  const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -23,26 +19,6 @@ export const Navbar = memo(({ onAdminClick, isAdmin }: NavbarProps) => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    toast.success('Oturumunuz sonlandırıldı');
-    navigate('/auth');
-  };
 
   return (
     <nav
@@ -72,47 +48,16 @@ export const Navbar = memo(({ onAdminClick, isAdmin }: NavbarProps) => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
-            {user ? (
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
-                  <div className="h-2 w-2 rounded-full bg-success animate-breathe" />
-                  <span className="text-sm font-bold text-foreground">
-                    {user.email?.split('@')[0]}
-                  </span>
-                </div>
-
-                {isAdmin && onAdminClick && (
-                  <Button
-                    onClick={onAdminClick}
-                    variant="outline"
-                    size="sm"
-                    className="border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10 hover:border-primary/50 transition-all duration-300"
-                  >
-                    <Shield className="w-4 h-4 mr-2" />
-                    Admin
-                  </Button>
-                )}
-
-                <Button
-                  onClick={handleSignOut}
-                  variant="outline"
-                  size="sm"
-                  className="border-destructive/30 bg-gradient-to-r from-destructive/10 to-destructive/5 hover:from-destructive/20 hover:to-destructive/10 hover:border-destructive/50 transition-all duration-300"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Çıkış
-                </Button>
-              </div>
-            ) : (
-              <Link to="/auth">
-                <Button
-                  size="sm"
-                  className="bg-gradient-to-r from-primary to-chart-2 hover:from-primary-dark hover:to-chart-2 shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all duration-300"
-                >
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Giriş Yap
-                </Button>
-              </Link>
+            {isAdmin && onAdminClick && (
+              <Button
+                onClick={onAdminClick}
+                variant="outline"
+                size="sm"
+                className="border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10 hover:border-primary/50 transition-all duration-300"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Admin
+              </Button>
             )}
           </div>
 
@@ -132,50 +77,18 @@ export const Navbar = memo(({ onAdminClick, isAdmin }: NavbarProps) => {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden py-4 space-y-3 animate-fade-in">
-            {user ? (
-              <>
-                <div className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
-                  <div className="h-2 w-2 rounded-full bg-success animate-breathe" />
-                  <span className="text-sm font-bold text-foreground">
-                    {user.email?.split('@')[0]}
-                  </span>
-                </div>
-
-                {isAdmin && onAdminClick && (
-                  <Button
-                    onClick={() => {
-                      onAdminClick();
-                      setMobileMenuOpen(false);
-                    }}
-                    variant="outline"
-                    className="w-full border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5"
-                  >
-                    <Shield className="w-4 h-4 mr-2" />
-                    Admin Panel
-                  </Button>
-                )}
-
-                <Button
-                  onClick={() => {
-                    handleSignOut();
-                    setMobileMenuOpen(false);
-                  }}
-                  variant="outline"
-                  className="w-full border-destructive/30 bg-gradient-to-r from-destructive/10 to-destructive/5"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Çıkış Yap
-                </Button>
-              </>
-            ) : (
-              <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                <Button
-                  className="w-full bg-gradient-to-r from-primary to-chart-2 shadow-lg shadow-primary/30"
-                >
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Giriş Yap
-                </Button>
-              </Link>
+            {isAdmin && onAdminClick && (
+              <Button
+                onClick={() => {
+                  onAdminClick();
+                  setMobileMenuOpen(false);
+                }}
+                variant="outline"
+                className="w-full border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Admin Panel
+              </Button>
             )}
           </div>
         )}
