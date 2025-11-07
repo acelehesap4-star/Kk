@@ -31,23 +31,101 @@ import {
   Star,
   AlertTriangle,
   CheckCircle,
-  Clock
+  Clock,
+  BarChart,
+  LineChart,
+  Briefcase,
+  Building
 } from 'lucide-react';
+
+import { supabase } from '@/lib/supabase';
+import { MarketSpecificTools } from './exchange-specific/MarketSpecificTools';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { User } from '@supabase/supabase-js';
+import { WalletComponent } from './wallet/WalletComponent';
+import { ExchangeTools } from './exchange-specific/ExchangeTools';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface RealTradingTerminalProps {
   user: User;
 }
 
+const MARKET_TYPES = {
+  crypto: 'Kripto',
+  stocks: 'Hisse Senedi',
+  forex: 'Forex',
+  commodities: 'Emtia',
+  indices: 'Endeks'
+} as const;
+
+const SUPPORTED_EXCHANGES = {
+  crypto: [
+    { id: 'binance', name: 'Binance' },
+    { id: 'huobi', name: 'Huobi' },
+    { id: 'kucoin', name: 'KuCoin' },
+    { id: 'bybit', name: 'Bybit' },
+    { id: 'okx', name: 'OKX' },
+  ],
+  stocks: [
+    { id: 'nasdaq', name: 'NASDAQ' },
+    { id: 'nyse', name: 'NYSE' },
+    { id: 'bist', name: 'Borsa İstanbul' },
+    { id: 'lse', name: 'London Stock Exchange' },
+  ],
+  forex: [
+    { id: 'fxcm', name: 'FXCM' },
+    { id: 'oanda', name: 'OANDA' },
+    { id: 'ig', name: 'IG' },
+  ],
+  commodities: [
+    { id: 'cme', name: 'CME Group' },
+    { id: 'ice', name: 'ICE' },
+    { id: 'lme', name: 'London Metal Exchange' },
+  ],
+  indices: [
+    { id: 'sp500', name: 'S&P 500' },
+    { id: 'nasdaq100', name: 'NASDAQ 100' },
+    { id: 'dax', name: 'DAX' },
+    { id: 'ftse', name: 'FTSE 100' },
+  ]
+};
+
 const RealTradingTerminal: React.FC<RealTradingTerminalProps> = ({ user }) => {
+  const [selectedMarketType, setSelectedMarketType] = useState<keyof typeof MARKET_TYPES>('crypto');
   const [selectedPair, setSelectedPair] = useState('BTC/USDT');
+  const [selectedExchange, setSelectedExchange] = useState('binance');
   const [orderType, setOrderType] = useState('market');
   const [tradeType, setTradeType] = useState('buy');
   const [amount, setAmount] = useState('');
   const [price, setPrice] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Piyasa türüne göre varsayılan sembolleri ayarla
+  useEffect(() => {
+    switch (selectedMarketType) {
+      case 'crypto':
+        setSelectedPair('BTC/USDT');
+        setSelectedExchange('binance');
+        break;
+      case 'stocks':
+        setSelectedPair('AAPL');
+        setSelectedExchange('nasdaq');
+        break;
+      case 'forex':
+        setSelectedPair('EUR/USD');
+        setSelectedExchange('fxcm');
+        break;
+      case 'commodities':
+        setSelectedPair('XAUUSD');
+        setSelectedExchange('cme');
+        break;
+      case 'indices':
+        setSelectedPair('SPX');
+        setSelectedExchange('sp500');
+        break;
+    }
+  }, [selectedMarketType]);
   const [showBalance, setShowBalance] = useState(true);
 
   const [marketData, setMarketData] = useState([
