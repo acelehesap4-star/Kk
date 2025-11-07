@@ -8,10 +8,37 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+// Check if Supabase credentials are properly configured
+const isSupabaseConfigured = SUPABASE_URL && 
+  SUPABASE_PUBLISHABLE_KEY && 
+  SUPABASE_URL !== 'https://your-project.supabase.co' && 
+  SUPABASE_URL !== 'your_supabase_url' &&
+  SUPABASE_PUBLISHABLE_KEY !== 'your-public-anon-key' &&
+  SUPABASE_PUBLISHABLE_KEY !== 'your_supabase_anon_key';
+
+// Create a mock client if Supabase is not configured
+const createMockSupabaseClient = () => ({
   auth: {
-    storage: localStorage,
-    persistSession: true,
-    autoRefreshToken: true,
-  }
+    signUp: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
+    signInWithPassword: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
+    signOut: () => Promise.resolve({ error: null }),
+    getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+  },
+  from: () => ({
+    select: () => Promise.resolve({ data: [], error: null }),
+    insert: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
+    update: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
+    delete: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } })
+  })
 });
+
+export const supabase = isSupabaseConfigured 
+  ? createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: {
+        storage: localStorage,
+        persistSession: true,
+        autoRefreshToken: true,
+      }
+    })
+  : createMockSupabaseClient();
