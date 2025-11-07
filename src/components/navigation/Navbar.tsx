@@ -3,12 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Shield, Menu, X, TrendingUp, Settings } from 'lucide-react';
 
-interface NavbarProps {
-  onAdminClick?: () => void;
-  isAdmin?: boolean;
-}
-
-export const Navbar = memo(({ onAdminClick, isAdmin }: NavbarProps) => {
+export const Navbar = memo(() => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -46,21 +41,6 @@ export const Navbar = memo(({ onAdminClick, isAdmin }: NavbarProps) => {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-4">
-            {isAdmin && onAdminClick && (
-              <Button
-                onClick={onAdminClick}
-                variant="outline"
-                size="sm"
-                className="border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10 hover:border-primary/50 transition-all duration-300"
-              >
-                <Shield className="w-4 h-4 mr-2" />
-                Admin
-              </Button>
-            )}
-          </div>
-
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -77,19 +57,6 @@ export const Navbar = memo(({ onAdminClick, isAdmin }: NavbarProps) => {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden py-4 space-y-3 animate-fade-in">
-            {isAdmin && onAdminClick && (
-              <Button
-                onClick={() => {
-                  onAdminClick();
-                  setMobileMenuOpen(false);
-                }}
-                variant="outline"
-                className="w-full border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5"
-              >
-                <Shield className="w-4 h-4 mr-2" />
-                Admin Panel
-              </Button>
-            )}
           </div>
         )}
       </div>

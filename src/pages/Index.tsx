@@ -1,6 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, Suspense, lazy, memo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { Navbar } from '@/components/navigation/Navbar';
 import { Header } from '@/components/trading/Header';
 
@@ -14,8 +12,6 @@ import { detectCandlestickPatterns } from '@/lib/indicators';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const AdminPanel = lazy(() => import('@/components/admin/AdminPanel').then(m => ({ default: m.AdminPanel })));
-
 const MemoizedNavbar = memo(Navbar);
 const MemoizedHeader = memo(Header);
 const MemoizedLeftSidebar = memo(LeftSidebar);
@@ -23,39 +19,6 @@ const MemoizedRightSidebar = memo(RightSidebar);
 const MemoizedMainChartArea = memo(MainChartArea);
 
 const Index = () => {
-  const navigate = useNavigate();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
-  
-  useEffect(() => {
-    const checkAuth = async () => {
-      // Skip auth check - allow direct access to trading terminal
-      // Optional: Check if user is admin for admin features
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', session.user.id)
-            .eq('role', 'admin')
-            .maybeSingle();
-
-          setIsAdmin(!!roleData);
-          
-          if (roleData) {
-            toast.success('Admin Panel Erişimi Aktif', {
-              description: 'Yönetici özellikleri kullanıma hazır'
-            });
-          }
-        }
-      } catch (error) {
-        console.log('Auth check failed, continuing without auth');
-      }
-    };
-
-    checkAuth();
-  }, [navigate]);
 
   const [exchange, setExchange] = useState<Exchange>(
     (localStorage.getItem('omni_exchange') as Exchange) || 'BINANCE'
@@ -163,26 +126,9 @@ const Index = () => {
     toast.success('Indicators applied');
   };
 
-  if (showAdminPanel && isAdmin) {
-    return (
-      <>
-        <MemoizedNavbar onAdminClick={() => setShowAdminPanel(false)} isAdmin={isAdmin} />
-        <div className="relative min-h-screen pt-24 p-4 animate-fade-in">
-          <div className="relative z-10 mx-auto max-w-[1800px] space-y-4">
-            <div className="glass-panel-strong rounded-2xl p-6 animate-scale-in">
-              <Suspense fallback={<Skeleton className="w-full h-screen" />}>
-                <AdminPanel />
-              </Suspense>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
   return (
     <>
-      <MemoizedNavbar onAdminClick={() => setShowAdminPanel(true)} isAdmin={isAdmin} />
+      <MemoizedNavbar />
       <div className="relative min-h-screen pt-24 p-4 animate-fade-in">
         <div className="relative z-10 mx-auto max-w-[1800px] space-y-4">
           <div className="glass-panel-strong rounded-2xl p-4 neon-border-strong animate-slide-fade-down">
