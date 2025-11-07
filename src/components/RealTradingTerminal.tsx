@@ -1,42 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   TrendingUp, 
   TrendingDown, 
-  BarChart3, 
-  Zap,
+  BarChart3,
   DollarSign,
-  Bitcoin,
-  Coins,
   Activity,
   Eye,
   EyeOff,
-  Plus,
-  Minus,
   ArrowUpRight,
   ArrowDownRight,
   RefreshCw,
-  Settings,
-  Filter,
   Search,
-  Bell,
   Wallet,
-  CreditCard,
-  Globe,
-  Star,
-  AlertTriangle,
   CheckCircle,
-  Clock,
-  BarChart,
-  LineChart,
-  Briefcase,
-  Building
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { executeTrade } from '@/lib/trade';
+import { WalletComponent } from './wallet/WalletComponent';
+import { ExchangeTools } from './exchange-specific/ExchangeTools';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { supabase } from '@/lib/supabase';
 import { MarketSpecificTools } from './exchange-specific/MarketSpecificTools';
@@ -91,15 +80,89 @@ const SUPPORTED_EXCHANGES = {
   ]
 };
 
+import type { MarketType, RealTradingTerminalProps } from '@/types/real-trading';
+import { MARKET_TYPES, SUPPORTED_EXCHANGES } from '@/types/real-trading';
+import { useMarketData, useBalances, useOrders, usePositions } from '@/hooks/use-trading-data';
+
 const RealTradingTerminal: React.FC<RealTradingTerminalProps> = ({ user }) => {
-  const [selectedMarketType, setSelectedMarketType] = useState<keyof typeof MARKET_TYPES>('crypto');
+  const [selectedMarketType, setSelectedMarketType] = useState<MarketType>('crypto');
   const [selectedPair, setSelectedPair] = useState('BTC/USDT');
   const [selectedExchange, setSelectedExchange] = useState('binance');
-  const [orderType, setOrderType] = useState('market');
-  const [tradeType, setTradeType] = useState('buy');
+  const [orderType, setOrderType] = useState<'market' | 'limit' | 'stop'>('market');
+  const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
   const [amount, setAmount] = useState('');
   const [price, setPrice] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [showBalance, setShowBalance] = useState(true);
+
+  const { 
+    marketData, 
+    isLoading: marketLoading,
+    refreshMarketData 
+  } = useMarketData(selectedMarketType, selectedExchange);
+
+  const {
+    balances,
+    isLoading: balancesLoading,
+    refreshBalances
+  } = useBalances(user.id, selectedExchange);
+
+  const {
+    orders,
+    isLoading: ordersLoading,
+    refreshOrders
+  } = useOrders(user.id, selectedExchange);
+
+  const {
+    positions,
+    isLoading: positionsLoading,
+    closePosition
+  } = usePositions(user.id, selectedExchange);
+
+  const handleTrade = useCallback(async () => {
+    if (!amount || (orderType === 'limit' && !price)) {
+      toast.error('Lütfen tüm alanları doldurun');
+      return;
+    }
+
+    try {
+      const parsedAmount = parseFloat(amount);
+      const parsedPrice = orderType === 'limit' ? parseFloat(price) : undefined;
+
+      await executeTrade({
+        userId: user.id,
+        marketType: selectedMarketType,
+        symbol: selectedPair,
+        exchange: selectedExchange,
+        side: tradeType,
+        orderType,
+        quantity: parsedAmount,
+        price: parsedPrice,
+      });
+
+      // Verileri yenile
+      refreshBalances();
+      refreshOrders();
+      refreshMarketData();
+
+      // Formları temizle
+      setAmount('');
+      setPrice('');
+    } catch (error) {
+      console.error('Trade error:', error);
+    }
+  }, [
+    amount,
+    price,
+    orderType,
+    user.id,
+    selectedMarketType,
+    selectedPair,
+    selectedExchange,
+    tradeType,
+    refreshBalances,
+    refreshOrders,
+    refreshMarketData
+  ]);
 
   // Piyasa türüne göre varsayılan sembolleri ayarla
   useEffect(() => {
