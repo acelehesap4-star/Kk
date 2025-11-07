@@ -3,6 +3,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { TradingProvider } from './context/trading-context';
+import { usePerformanceMonitoring } from './lib/performance-monitoring';
 // import { WagmiProvider } from 'wagmi';
 // import { createWeb3Modal } from '@web3modal/wagmi/react';
 // import { config, projectId } from './lib/web3-config';
@@ -107,7 +109,8 @@ const App = () => {
     <AdvancedErrorBoundary>
       <ThemeProvider defaultTheme="dark" storageKey="omni-ui-theme">
           <QueryClientProvider client={queryClient}>
-            <TooltipProvider>
+            <TradingProvider>
+              <TooltipProvider>
               <Toaster />
               <Sonner />
               <div className="min-h-screen relative overflow-hidden">
