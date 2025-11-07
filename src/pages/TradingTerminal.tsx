@@ -25,9 +25,8 @@ import { Exchange } from '@/types/trading';
 import { EXCHANGES } from '@/lib/exchanges';
 import { exchangeAPI, RealTimePrice } from '@/lib/api/exchangeAPI';
 import { supabaseAPI } from '@/lib/api/supabaseAPI';
-import { AITradingAssistant } from '@/components/tools/AITradingAssistant';
-import { ArbitrageDetector } from '@/components/tools/ArbitrageDetector';
-import { AdvancedPortfolioAnalyzer } from '@/components/tools/AdvancedPortfolioAnalyzer';
+import { ExchangeToolsFactory } from '@/components/exchange-specific/ExchangeToolsFactory';
+import { ExchangeTradingFactory } from '@/components/exchange-specific/ExchangeTradingFactory';
 import { toast } from 'sonner';
 
 interface TradeOrder {
@@ -296,275 +295,33 @@ export default function TradingTerminal() {
           </Card>
 
           <Tabs defaultValue="trading" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 bg-black/40 border border-cyan-500/20">
+            <TabsList className="grid w-full grid-cols-2 bg-black/40 border border-cyan-500/20">
               <TabsTrigger value="trading" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
                 <Zap className="h-4 w-4 mr-2" />
-                Trading
+                {currentExchange?.name} Trading
               </TabsTrigger>
-              <TabsTrigger value="ai-assistant" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
-                <Brain className="h-4 w-4 mr-2" />
-                AI Assistant
-              </TabsTrigger>
-              <TabsTrigger value="arbitrage" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
+              <TabsTrigger value="exchange-tools" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
                 <Target className="h-4 w-4 mr-2" />
-                Arbitrage
-              </TabsTrigger>
-              <TabsTrigger value="portfolio" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
-                <Shield className="h-4 w-4 mr-2" />
-                Portfolio
+                {currentExchange?.name} Araçları
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="trading" className="space-y-6">
-              {/* Trading Interface */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Order Form */}
-                <Card className="bg-black/40 border-cyan-500/20 backdrop-blur-xl">
-                  <CardHeader>
-                    <CardTitle className="text-cyan-400 flex items-center gap-2">
-                      <Zap className="h-5 w-5" />
-                      Place Order
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                {/* Order Side */}
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant={orderSide === 'buy' ? 'default' : 'outline'}
-                    onClick={() => setOrderSide('buy')}
-                    className={`${
-                      orderSide === 'buy' 
-                        ? 'bg-green-500/20 text-green-400 border-green-500/40' 
-                        : 'bg-black/40 border-green-500/20 text-green-400 hover:bg-green-500/10'
-                    }`}
-                  >
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    BUY
-                  </Button>
-                  <Button
-                    variant={orderSide === 'sell' ? 'default' : 'outline'}
-                    onClick={() => setOrderSide('sell')}
-                    className={`${
-                      orderSide === 'sell' 
-                        ? 'bg-red-500/20 text-red-400 border-red-500/40' 
-                        : 'bg-black/40 border-red-500/20 text-red-400 hover:bg-red-500/10'
-                    }`}
-                  >
-                    <TrendingDown className="h-4 w-4 mr-2" />
-                    SELL
-                  </Button>
-                </div>
+              <ExchangeTradingFactory 
+                exchange={currentExchange?.name as Exchange}
+                symbol={selectedSymbol}
+                userId={userId}
+              />
+            </TabsContent>
 
-                {/* Order Type */}
-                <div>
-                  <label className="text-sm text-cyan-400/80 mb-2 block">Order Type</label>
-                  <Select value={orderType} onValueChange={(value: 'market' | 'limit') => setOrderType(value)}>
-                    <SelectTrigger className="bg-black/40 border-cyan-500/20 text-cyan-400">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-black/90 border-cyan-500/20">
-                      <SelectItem value="limit" className="text-cyan-400 focus:bg-cyan-500/10">Limit Order</SelectItem>
-                      <SelectItem value="market" className="text-cyan-400 focus:bg-cyan-500/10">Market Order</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Amount */}
-                <div>
-                  <label className="text-sm text-cyan-400/80 mb-2 block">Amount</label>
-                  <Input
-                    type="number"
-                    placeholder="0.00"
-                    value={orderAmount}
-                    onChange={(e) => setOrderAmount(e.target.value)}
-                    className="bg-black/40 border-cyan-500/20 text-cyan-400"
-                    step="0.001"
-                  />
-                </div>
-
-                {/* Price */}
-                {orderType === 'limit' && (
-                  <div>
-                    <label className="text-sm text-cyan-400/80 mb-2 block">Price</label>
-                    <Input
-                      type="number"
-                      placeholder="0.00"
-                      value={orderPrice}
-                      onChange={(e) => setOrderPrice(e.target.value)}
-                      className="bg-black/40 border-cyan-500/20 text-cyan-400"
-                      step="0.01"
-                    />
-                  </div>
-                )}
-
-                {/* Order Summary */}
-                {order && (
-                  <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-cyan-400/80">Total:</span>
-                      <span className="text-cyan-400 font-semibold">${order.total.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-cyan-400/80">Commission:</span>
-                      <span className="text-cyan-400">${order.commission.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm border-t border-cyan-500/20 pt-2">
-                      <span className="text-yellow-400/80">NXT Required:</span>
-                      <span className="text-yellow-400 font-semibold">{order.nxtRequired.toFixed(2)} NXT</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* NXT Balance Warning */}
-                {order && userNXTBalance < order.nxtRequired && (
-                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                    <div className="flex items-start gap-2">
-                      <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
-                      <div className="text-xs text-red-400">
-                        <p className="font-semibold mb-1">Yetersiz NXT Bakiyesi!</p>
-                        <p>Bu işlem için {order.nxtRequired.toFixed(2)} NXT gerekli, ancak bakiyeniz {userNXTBalance.toFixed(2)} NXT.</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Place Order Button */}
-                <Button 
-                  onClick={handlePlaceOrder}
-                  disabled={!order || userNXTBalance < (order?.nxtRequired || 0)}
-                  className={`w-full font-semibold ${
-                    orderSide === 'buy' 
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white' 
-                      : 'bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-400 hover:to-rose-400 text-white'
-                  }`}
-                >
-                  {order && userNXTBalance >= order.nxtRequired ? (
-                    <>
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Place {orderSide.toUpperCase()} Order
-                    </>
-                  ) : (
-                    <>
-                      <Wallet className="h-4 w-4 mr-2" />
-                      Need More NXT
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Market Stats */}
-            <Card className="bg-black/40 border-cyan-500/20 backdrop-blur-xl">
-              <CardHeader>
-                <CardTitle className="text-cyan-400 flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Market Stats
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {marketData && (
-                  <>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-xs text-cyan-400/60 uppercase">24h High</p>
-                        <p className="text-lg font-semibold text-green-400">${marketData.high24h.toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-cyan-400/60 uppercase">24h Low</p>
-                        <p className="text-lg font-semibold text-red-400">${marketData.low24h.toLocaleString()}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
-                      <p className="text-xs text-cyan-400/60 uppercase mb-2">Exchange Info</p>
-                      <div className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-cyan-400/80">Volume:</span>
-                          <span className="text-cyan-400">{currentExchange.volume24h}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-cyan-400/80">Pairs:</span>
-                          <span className="text-cyan-400">{currentExchange.pairs}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-cyan-400/80">Fees:</span>
-                          <span className="text-cyan-400">{currentExchange.fees}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* NXT Token Info */}
-            <Card className="bg-black/40 border-yellow-500/20 backdrop-blur-xl">
-              <CardHeader>
-                <CardTitle className="text-yellow-400 flex items-center gap-2">
-                  <Crown className="h-5 w-5" />
-                  NXT Token System
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
-                  <div className="text-center mb-3">
-                    <p className="text-2xl font-bold text-yellow-400">{userNXTBalance.toFixed(2)} NXT</p>
-                    <p className="text-xs text-yellow-400/60">Mevcut Bakiye</p>
-                  </div>
-                  
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-yellow-400/80">Token Değeri:</span>
-                      <span className="text-yellow-400">$0.10</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-yellow-400/80">USD Değeri:</span>
-                      <span className="text-yellow-400">${(userNXTBalance * 0.1).toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
-                  <p className="text-xs text-cyan-400/60 uppercase mb-2">Komisyon Sistemi</p>
-                  <div className="space-y-1 text-xs text-cyan-400/80">
-                    <p>• Tüm işlemler NXT token ile komisyon öder</p>
-                    <p>• Standart komisyon oranı: %0.1</p>
-                    <p>• NXT ile %50 komisyon indirimi</p>
-                    <p>• Otomatik bakiye düşümü</p>
-                  </div>
-                </div>
-
-                <Button 
-                  onClick={() => window.location.href = '/wallet'}
-                  className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-semibold"
-                >
-                  <Wallet className="h-4 w-4 mr-2" />
-                  Buy More NXT
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="ai-assistant">
-          <AITradingAssistant 
-            exchange={currentExchange?.name as Exchange}
-            symbol={selectedSymbol}
-            currentPrice={marketData}
-          />
-        </TabsContent>
-
-        <TabsContent value="arbitrage">
-          <ArbitrageDetector 
-            symbols={currentExchange?.defaults || []}
-            exchanges={[currentExchange?.name as Exchange].filter(Boolean)}
-          />
-        </TabsContent>
-
-        <TabsContent value="portfolio">
-          <AdvancedPortfolioAnalyzer userId={userId} />
-        </TabsContent>
-      </Tabs>
+            <TabsContent value="exchange-tools" className="space-y-6">
+              <ExchangeToolsFactory 
+                exchange={currentExchange?.name as Exchange}
+                symbol={selectedSymbol}
+                userId={userId}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
