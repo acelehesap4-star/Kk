@@ -29,26 +29,28 @@ const Index = () => {
   
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/auth');
-        return;
-      }
+      // Skip auth check - allow direct access to trading terminal
+      // Optional: Check if user is admin for admin features
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .eq('role', 'admin')
+            .maybeSingle();
 
-      // Check if user is admin
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id)
-        .eq('role', 'admin')
-        .maybeSingle();
-
-      setIsAdmin(!!roleData);
-      
-      if (roleData) {
-        toast.success('Admin Panel Erişimi Aktif', {
-          description: 'Yönetici özellikleri kullanıma hazır'
-        });
+          setIsAdmin(!!roleData);
+          
+          if (roleData) {
+            toast.success('Admin Panel Erişimi Aktif', {
+              description: 'Yönetici özellikleri kullanıma hazır'
+            });
+          }
+        }
+      } catch (error) {
+        console.log('Auth check failed, continuing without auth');
       }
     };
 
