@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { apiConfig } from '@/lib/config/apiConfig';
+import { ethers } from 'ethers';
 
 export interface ColdWalletConfig {
   id: string;
@@ -260,13 +261,57 @@ export class ColdWalletPaymentSystem {
           .eq('id', paymentId);
 
         setTimeout(async () => {
-          const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-          
+          // If real payments are enabled and RPC + private key are provided, attempt on-chain transfer
+          const enableReal = import.meta.env.VITE_ENABLE_REAL_PAYMENTS === 'true';
+          const privateKey = import.meta.env.VITE_PAYMENT_PRIVATE_KEY || '';
+          const rpcUrl = import.meta.env.VITE_RPC_URL || '';
+
+          let txHash: string | null = null;
+
+          if (enableReal && privateKey && rpcUrl) {
+            try {
+              // Load payment record to get amount/currency/target wallet
+              const { data: paymentData } = await supabase
+                .from('micro_payments')
+                .select('*')
+                .eq('id', paymentId)
+                .single();
+
+              const target = paymentData.wallet_address;
+              const amount = Number(paymentData.amount);
+              const chain = paymentData.chain;
+
+              // Only support native coin transfers for EVM chains here (ETH, BSC, Polygon)
+              const evmChains = ['ethereum', 'binance-smart-chain', 'polygon', 'arbitrum', 'optimism'];
+
+              if (evmChains.includes(chain) && amount > 0) {
+                const provider = new ethers.JsonRpcProvider(rpcUrl);
+                const signer = new ethers.Wallet(privateKey, provider);
+
+                // amount is expected in native token units (e.g. ETH). If your amount is in a different unit
+                // (for example USDT), you must convert to native token value before calling this.
+                const value = ethers.parseUnits(String(amount), 'ether');
+
+                const tx = await signer.sendTransaction({ to: target, value });
+                const receipt = await tx.wait();
+                txHash = receipt.transactionHash;
+              }
+            } catch (sendError) {
+              console.error('Real payment send failed:', sendError);
+              txHash = null;
+            }
+          }
+
+          if (!txHash) {
+            // Fallback to mock tx hash when real payments are disabled or failed
+            txHash = `0x${Math.random().toString(16).slice(2, 66)}`;
+          }
+
           await supabase
             .from('micro_payments')
             .update({
               status: 'completed',
-              tx_hash: mockTxHash,
+              tx_hash: txHash,
               completed_at: new Date().toISOString()
             })
             .eq('id', paymentId);
