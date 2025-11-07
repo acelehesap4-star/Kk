@@ -18,18 +18,18 @@ const router = createBrowserRouter(
       ),
       children: [
         {
-          path: 'auth',
+          index: true,
           element: (
             <Suspense fallback={<LoadingSpinner />}>
-              <Auth />
+              <Trading />
             </Suspense>
           ),
         },
         {
-          path: 'trading',
+          path: 'auth',
           element: (
             <Suspense fallback={<LoadingSpinner />}>
-              <Trading />
+              <Auth />
             </Suspense>
           ),
         },
