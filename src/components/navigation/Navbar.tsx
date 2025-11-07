@@ -65,10 +65,10 @@ export const Navbar = memo(({ onAdminClick, isAdmin }: NavbarProps) => {
             </div>
             <div>
               <h1 className="bg-gradient-to-r from-primary via-cyan-400 to-primary bg-clip-text text-2xl font-black tracking-tighter text-transparent drop-shadow-[0_0_20px_rgba(56,189,248,0.4)]">
-                OMNI TERMINAL
+                KK TRADING
               </h1>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                Pro Trading Platform
+                Trading Platform
               </p>
             </div>
           </Link>

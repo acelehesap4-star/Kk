@@ -102,10 +102,10 @@ export default function Auth() {
               </motion.div>
               
               <h1 className="bg-gradient-to-r from-primary via-primary to-cyan-400 bg-clip-text text-3xl font-black tracking-tight text-transparent">
-                OmniTerminal
+                KK Trading
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                Professional Multi-Exchange & DEX Trading Platform
+                Multi-Exchange Trading Platform
               </p>
             </div>
 

@@ -60,10 +60,10 @@ export function Header({
           </div>
           <div>
             <h1 className="bg-gradient-to-r from-primary via-cyan-400 to-primary bg-clip-text text-3xl font-black tracking-tighter text-transparent drop-shadow-[0_0_20px_rgba(56,189,248,0.4)]">
-              OMNI TERMINAL
+              KK TRADING
             </h1>
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-              Elite Multi-Exchange Trading Platform
+              Multi-Exchange Trading Platform
             </p>
           </div>
         </div>

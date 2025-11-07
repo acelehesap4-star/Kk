@@ -32,9 +32,9 @@ export const ADMIN_CONFIG = {
   }
 };
 
-export const OMNI99_TOKEN = {
-  name: 'OMNI99',
-  symbol: 'OMNI',
+export const PLATFORM_TOKEN = {
+  name: 'KK',
+  symbol: 'KK',
   decimals: 18,
   totalSupply: '100000000000000000000000000', // 100M tokens
   commission: 0.001 // 0.1% commission on all trades
