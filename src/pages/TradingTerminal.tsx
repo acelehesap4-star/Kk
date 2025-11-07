@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -15,10 +16,18 @@ import {
   CheckCircle,
   Wallet,
   BarChart3,
-  Zap
+  Zap,
+  Brain,
+  Target,
+  Shield
 } from 'lucide-react';
 import { Exchange } from '@/types/trading';
 import { EXCHANGES } from '@/lib/exchanges';
+import { exchangeAPI, RealTimePrice } from '@/lib/api/exchangeAPI';
+import { supabaseAPI } from '@/lib/api/supabaseAPI';
+import { AITradingAssistant } from '@/components/tools/AITradingAssistant';
+import { ArbitrageDetector } from '@/components/tools/ArbitrageDetector';
+import { AdvancedPortfolioAnalyzer } from '@/components/tools/AdvancedPortfolioAnalyzer';
 import { toast } from 'sonner';
 
 interface TradeOrder {
@@ -45,12 +54,15 @@ export default function TradingTerminal() {
   const category = searchParams.get('category') || 'crypto';
   
   const [selectedSymbol, setSelectedSymbol] = useState('');
-  const [marketData, setMarketData] = useState<MarketData | null>(null);
+  const [marketData, setMarketData] = useState<RealTimePrice | null>(null);
   const [userNXTBalance, setUserNXTBalance] = useState(1250.75);
   const [orderSide, setOrderSide] = useState<'buy' | 'sell'>('buy');
   const [orderAmount, setOrderAmount] = useState('');
   const [orderPrice, setOrderPrice] = useState('');
   const [orderType, setOrderType] = useState<'market' | 'limit'>('limit');
+  const [isLoadingPrice, setIsLoadingPrice] = useState(false);
+  const [webSocket, setWebSocket] = useState<WebSocket | null>(null);
+  const [userId] = useState('demo-user-id'); // In production, get from auth
 
   const currentExchange = exchange ? EXCHANGES[exchange.toUpperCase() as Exchange] : null;
 
@@ -61,18 +73,46 @@ export default function TradingTerminal() {
     }
   }, [currentExchange]);
 
-  const loadMarketData = (symbol: string) => {
-    // Simulated market data
-    const mockData: MarketData = {
-      symbol: symbol,
-      price: Math.random() * 50000 + 1000,
-      change24h: (Math.random() - 0.5) * 10,
-      volume24h: `$${(Math.random() * 1000 + 100).toFixed(1)}M`,
-      high24h: Math.random() * 55000 + 1000,
-      low24h: Math.random() * 45000 + 1000
-    };
-    setMarketData(mockData);
-    setOrderPrice(mockData.price.toFixed(2));
+  useEffect(() => {
+    // Setup WebSocket for real-time price updates
+    if (currentExchange && selectedSymbol) {
+      const ws = exchangeAPI.createWebSocketConnection(
+        currentExchange.name as Exchange,
+        selectedSymbol,
+        (data: RealTimePrice) => {
+          setMarketData(data);
+          if (orderType === 'market') {
+            setOrderPrice(data.price.toFixed(2));
+          }
+        }
+      );
+      
+      if (ws) {
+        setWebSocket(ws);
+        return () => {
+          ws.close();
+        };
+      }
+    }
+  }, [currentExchange, selectedSymbol]);
+
+  const loadMarketData = async (symbol: string) => {
+    if (!currentExchange) return;
+    
+    setIsLoadingPrice(true);
+    try {
+      const priceData = await exchangeAPI.getRealTimePrice(
+        currentExchange.name as Exchange, 
+        symbol
+      );
+      setMarketData(priceData);
+      setOrderPrice(priceData.price.toFixed(2));
+    } catch (error) {
+      console.error('Error loading market data:', error);
+      toast.error('Piyasa verisi yüklenemedi');
+    } finally {
+      setIsLoadingPrice(false);
+    }
   };
 
   const calculateOrder = (): TradeOrder | null => {
@@ -96,9 +136,9 @@ export default function TradingTerminal() {
     };
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     const order = calculateOrder();
-    if (!order) {
+    if (!order || !currentExchange) {
       toast.error('Lütfen geçerli değerler girin');
       return;
     }
@@ -108,13 +148,51 @@ export default function TradingTerminal() {
       return;
     }
 
-    // Simulate order placement
-    setUserNXTBalance(prev => prev - order.nxtRequired);
-    toast.success(`${order.side.toUpperCase()} emri başarıyla yerleştirildi! ${order.nxtRequired.toFixed(2)} NXT komisyon ödendi.`);
-    
-    // Reset form
-    setOrderAmount('');
-    setOrderPrice(marketData?.price.toFixed(2) || '');
+    try {
+      // Create order in database
+      const orderId = await supabaseAPI.createTradingOrder({
+        user_id: userId,
+        exchange: currentExchange.name as Exchange,
+        symbol: selectedSymbol,
+        side: order.side,
+        order_type: orderType,
+        amount: order.amount,
+        price: order.price,
+        total: order.total,
+        commission: order.commission,
+        nxt_used: order.nxtRequired,
+        status: 'pending'
+      });
+
+      if (orderId) {
+        // Update local balance
+        setUserNXTBalance(prev => prev - order.nxtRequired);
+        toast.success(`${order.side.toUpperCase()} emri başarıyla yerleştirildi! ${order.nxtRequired.toFixed(2)} NXT komisyon ödendi.`);
+        
+        // Reset form
+        setOrderAmount('');
+        setOrderPrice(marketData?.price.toFixed(2) || '');
+
+        // Simulate order execution after a delay
+        setTimeout(async () => {
+          const success = Math.random() > 0.1; // 90% success rate
+          if (success) {
+            await supabaseAPI.updateTradingOrderStatus(orderId, 'filled', order.amount, order.price);
+            toast.success(`${order.side.toUpperCase()} emri tamamlandı!`);
+          } else {
+            await supabaseAPI.updateTradingOrderStatus(orderId, 'rejected');
+            // Refund NXT
+            setUserNXTBalance(prev => prev + order.nxtRequired);
+            toast.error('Emir reddedildi - NXT iadesi yapıldı');
+          }
+        }, Math.random() * 5000 + 2000); // 2-7 seconds delay
+      } else {
+        toast.error('Emir oluşturulamadı');
+      }
+    } catch (error) {
+      console.error('Error placing order:', error);
+      toast.error('Emir yerleştirme sırasında hata oluştu');
+    }
   };
 
   const order = calculateOrder();
@@ -217,17 +295,38 @@ export default function TradingTerminal() {
             </CardContent>
           </Card>
 
-          {/* Trading Interface */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Order Form */}
-            <Card className="bg-black/40 border-cyan-500/20 backdrop-blur-xl">
-              <CardHeader>
-                <CardTitle className="text-cyan-400 flex items-center gap-2">
-                  <Zap className="h-5 w-5" />
-                  Place Order
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+          <Tabs defaultValue="trading" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4 bg-black/40 border border-cyan-500/20">
+              <TabsTrigger value="trading" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
+                <Zap className="h-4 w-4 mr-2" />
+                Trading
+              </TabsTrigger>
+              <TabsTrigger value="ai-assistant" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
+                <Brain className="h-4 w-4 mr-2" />
+                AI Assistant
+              </TabsTrigger>
+              <TabsTrigger value="arbitrage" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
+                <Target className="h-4 w-4 mr-2" />
+                Arbitrage
+              </TabsTrigger>
+              <TabsTrigger value="portfolio" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
+                <Shield className="h-4 w-4 mr-2" />
+                Portfolio
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="trading" className="space-y-6">
+              {/* Trading Interface */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Order Form */}
+                <Card className="bg-black/40 border-cyan-500/20 backdrop-blur-xl">
+                  <CardHeader>
+                    <CardTitle className="text-cyan-400 flex items-center gap-2">
+                      <Zap className="h-5 w-5" />
+                      Place Order
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                 {/* Order Side */}
                 <div className="grid grid-cols-2 gap-2">
                   <Button
@@ -445,6 +544,27 @@ export default function TradingTerminal() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="ai-assistant">
+          <AITradingAssistant 
+            exchange={currentExchange?.name as Exchange}
+            symbol={selectedSymbol}
+            currentPrice={marketData}
+          />
+        </TabsContent>
+
+        <TabsContent value="arbitrage">
+          <ArbitrageDetector 
+            symbols={currentExchange?.defaults || []}
+            exchanges={[currentExchange?.name as Exchange].filter(Boolean)}
+          />
+        </TabsContent>
+
+        <TabsContent value="portfolio">
+          <AdvancedPortfolioAnalyzer userId={userId} />
+        </TabsContent>
+      </Tabs>
         </div>
       </div>
     </div>
