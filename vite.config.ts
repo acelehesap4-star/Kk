@@ -86,7 +86,7 @@ export default defineConfig({
             './src/components/trading/RiskCalculator'
           ],
           'trading-terminal': [
-            './src/components/trading/AdvancedTerminal',
+
             './src/components/trading/Terminal'
           ],
           'trading-tools': [
