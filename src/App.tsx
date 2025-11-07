@@ -111,28 +111,29 @@ const App = () => {
           <QueryClientProvider client={queryClient}>
             <TradingProvider>
               <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <div className="min-h-screen relative overflow-hidden">
-                {/* <Suspense fallback={null}>
-                  <Advanced3DBackground />
-                </Suspense> */}
-                <div className="relative z-10">
-                  {!user ? (
-                    <ModernLoginScreen 
-                      onLogin={handleLogin}
-                      isLoading={loginLoading}
-                      error={loginError}
-                    />
-                  ) : (
-                    <ModernTradingInterface 
-                      user={user}
-                      onLogout={handleLogout}
-                    />
-                  )}
+                <Toaster />
+                <Sonner />
+                <div className="min-h-screen relative overflow-hidden">
+                  {/* <Suspense fallback={null}>
+                    <Advanced3DBackground />
+                  </Suspense> */}
+                  <div className="relative z-10">
+                    {!user ? (
+                      <ModernLoginScreen 
+                        onLogin={handleLogin}
+                        isLoading={loginLoading}
+                        error={loginError}
+                      />
+                    ) : (
+                      <ModernTradingInterface 
+                        user={user}
+                        onLogout={handleLogout}
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
-            </TooltipProvider>
+              </TooltipProvider>
+            </TradingProvider>
           </QueryClientProvider>
       </ThemeProvider>
     </AdvancedErrorBoundary>

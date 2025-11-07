@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { OrderPanel } from '../trading/OrderPanel'
+import OrderPanel from '../trading/OrderPanel'
 import { TradingContext } from '../../context/trading-context'
+import '@testing-library/jest-dom'
 
 describe('OrderPanel', () => {
   const mockContext = {
