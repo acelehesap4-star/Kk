@@ -113,14 +113,16 @@ const Index = () => {
   }, [exchange, symbol, source, timeframe]);
 
   useEffect(() => {
-    if (lastPrice !== null && previousPrice !== null) {
-      addLog(`Price updated: $${lastPrice.toFixed(6)}`, 'info');
+    if (lastPrice !== null && lastPrice !== undefined && previousPrice !== null) {
+      addLog(`Price updated: $${Number(lastPrice).toFixed(6)}`, 'info');
     }
     setPreviousPrice(lastPrice);
   }, [lastPrice]);
 
   useEffect(() => {
-    addLog(`Trading terminal initialized - ${exchange} / ${symbol.toUpperCase()}`, 'info');
+    if (symbol && exchange) {
+      addLog(`Trading terminal initialized - ${exchange} / ${symbol.toUpperCase()}`, 'info');
+    }
   }, []);
 
   const handleExchangeChange = (newExchange: Exchange) => {
@@ -132,8 +134,10 @@ const Index = () => {
   };
 
   const handleSymbolChange = (newSymbol: string) => {
-    setSymbol(newSymbol);
-    addLog(`Symbol changed to ${newSymbol.toUpperCase()}`, 'info');
+    if (newSymbol) {
+      setSymbol(newSymbol);
+      addLog(`Symbol changed to ${newSymbol.toUpperCase()}`, 'info');
+    }
   };
 
   const handleSourceChange = (newSource: DataSource) => {

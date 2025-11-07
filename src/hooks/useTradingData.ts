@@ -54,7 +54,9 @@ export function useTradingData(
         
         // Get current price
         const ticker = await binance.fetchTicker(symbol);
-        setLastPrice(ticker.price);
+        if (ticker && ticker.price !== undefined) {
+          setLastPrice(Number(ticker.price));
+        }
         
       } else if (exchange === 'STOCKS' && stocksDataProvider.isConfigured()) {
         // Use real stocks API
@@ -62,7 +64,9 @@ export function useTradingData(
         
         // Get current price
         const quote = await stocksDataProvider.getQuote(symbol);
-        setLastPrice(quote.price);
+        if (quote && quote.price !== undefined) {
+          setLastPrice(Number(quote.price));
+        }
         
       } else if (exchange === 'FOREX' && forexDataProvider.isConfigured()) {
         // Use real forex API
@@ -70,7 +74,9 @@ export function useTradingData(
         
         // Get current price
         const quote = await forexDataProvider.getQuote(symbol);
-        setLastPrice((quote.bid + quote.ask) / 2);
+        if (quote && quote.bid !== undefined && quote.ask !== undefined) {
+          setLastPrice((Number(quote.bid) + Number(quote.ask)) / 2);
+        }
         
       } else {
         // Fallback to demo data
@@ -119,7 +125,10 @@ export function useTradingData(
         }));
         
         if (processedCandles.length > 0) {
-          setLastPrice(processedCandles[processedCandles.length - 1].y[3]);
+          const lastCandle = processedCandles[processedCandles.length - 1];
+          if (lastCandle && lastCandle.y && lastCandle.y[3] !== undefined) {
+            setLastPrice(Number(lastCandle.y[3]));
+          }
         }
       }
       
