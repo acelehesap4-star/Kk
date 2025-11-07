@@ -78,10 +78,10 @@ const Index = () => {
   }, [exchange, symbol, source, timeframe]);
 
   useEffect(() => {
-    if (lastPrice !== null && lastPrice !== undefined && previousPrice !== null) {
-      addLog(`Price updated: $${Number(lastPrice).toFixed(6)}`, 'info');
+    if (typeof lastPrice === 'number') {
+      addLog(`Price updated: $${lastPrice.toFixed(6)}`, 'info');
+      setPreviousPrice(lastPrice);
     }
-    setPreviousPrice(lastPrice);
   }, [lastPrice]);
 
   useEffect(() => {

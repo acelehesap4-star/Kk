@@ -33,7 +33,7 @@ export function useTradingData(
   timeframe: Timeframe = '15m'
 ) {
   const [candles, setCandles] = useState<Candle[]>([]);
-  const [lastPrice, setLastPrice] = useState<number | null>(null);
+  const [lastPrice, setLastPrice] = useState<number>(0);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(false);
   
