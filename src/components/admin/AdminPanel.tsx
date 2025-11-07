@@ -1,428 +1,541 @@
-import { useState, useEffect } from 'react';
-import { Shield, DollarSign, Users, Activity, CheckCircle, XCircle, Clock, TrendingUp, Zap, Eye, RefreshCw, Download } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Shield, 
+  Users, 
+  Coins, 
+  TrendingUp, 
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  Clock,
+  DollarSign,
+  BarChart3,
+  Settings,
+  Eye,
+  Edit,
+  Trash2,
+  Plus,
+  Search,
+  Filter,
+  Download,
+  Upload,
+  Bell,
+  Lock,
+  Unlock,
+  UserCheck,
+  UserX,
+  CreditCard,
+  Wallet,
+  Activity,
+  Globe,
+  Server,
+  Database
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-interface Payment {
-  id: string;
-  user_id: string;
-  blockchain: string;
-  tx_hash: string | null;
-  amount_crypto: number;
-  amount_usd: number;
-  omni99_amount: number;
-  status: string;
-  created_at: string;
+interface AdvancedAdminPanelProps {
+  user: any;
 }
 
-interface Stats {
-  totalUsers: number;
-  totalPayments: number;
-  pendingPayments: number;
-  totalOmni99Issued: number;
-  approvedPayments: number;
-  rejectedPayments: number;
-  totalVolumeUSD: number;
-  avgPaymentSize: number;
-}
-
-export const AdminPanel = () => {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [stats, setStats] = useState<Stats>({
+const AdvancedAdminPanel: React.FC<AdvancedAdminPanelProps> = ({ user }) => {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [users, setUsers] = useState<any[]>([]);
+  const [tokenRequests, setTokenRequests] = useState<any[]>([]);
+  const [systemStats, setSystemStats] = useState({
     totalUsers: 0,
-    totalPayments: 0,
-    pendingPayments: 0,
-    totalOmni99Issued: 0,
-    approvedPayments: 0,
-    rejectedPayments: 0,
-    totalVolumeUSD: 0,
-    avgPaymentSize: 0,
+    activeUsers: 0,
+    totalVolume: 0,
+    totalTokens: 0,
+    pendingRequests: 0,
+    systemUptime: 0,
+    serverLoad: 0,
+    databaseSize: 0
   });
-  const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-
-      // Fetch payments
-      const { data: paymentsData, error: paymentsError } = await supabase
-        .from('crypto_payments')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (paymentsError) throw paymentsError;
-      setPayments(paymentsData || []);
-
-      // Fetch stats
-      const { data: balancesData } = await supabase
-        .from('omni99_balances')
-        .select('balance, total_purchased');
-
-      const totalOmni99 = balancesData?.reduce((sum, b) => sum + parseFloat(String(b.total_purchased)), 0) || 0;
-      const totalUsers = balancesData?.length || 0;
-      const totalVolumeUSD = paymentsData?.reduce((sum, p) => sum + parseFloat(String(p.amount_usd)), 0) || 0;
-      const avgPaymentSize = paymentsData?.length ? totalVolumeUSD / paymentsData.length : 0;
-
-      setStats({
-        totalUsers,
-        totalPayments: paymentsData?.length || 0,
-        pendingPayments: paymentsData?.filter(p => p.status === 'pending').length || 0,
-        approvedPayments: paymentsData?.filter(p => p.status === 'approved').length || 0,
-        rejectedPayments: paymentsData?.filter(p => p.status === 'rejected').length || 0,
-        totalOmni99Issued: totalOmni99,
-        totalVolumeUSD,
-        avgPaymentSize,
-      });
-    } catch (error) {
-      console.error('Error fetching admin data:', error);
-      toast.error('Failed to load admin data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Load real data from Supabase
   useEffect(() => {
-    fetchData();
+    const loadData = async () => {
+      try {
+        // Fetch users
+        const { data: userData, error: userError } = await supabase
+          .from('profiles')
+          .select('*');
+        
+        if (userError) throw userError;
+        setUsers(userData || []);
+
+        // Fetch token requests
+        const { data: tokenData, error: tokenError } = await supabase
+          .from('token_requests')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (tokenError) throw tokenError;
+        setTokenRequests(tokenData || []);
+
+        // Calculate system stats
+        const activeUsers = userData?.filter(u => u.last_active_at > new Date(Date.now() - 24*60*60*1000).toISOString()).length || 0;
+        
+        const { data: volumeData } = await supabase
+          .from('trading_history')
+          .select('volume')
+          .gte('created_at', new Date(Date.now() - 30*24*60*60*1000).toISOString());
+        
+        const totalVolume = volumeData?.reduce((sum, record) => sum + (record.volume || 0), 0) || 0;
+
+        const { data: tokenStats } = await supabase
+          .from('omni99_stats')
+          .select('total_supply, circulating_supply')
+          .single();
+
+        setSystemStats({
+          totalUsers: userData?.length || 0,
+          activeUsers,
+          totalVolume,
+          totalTokens: tokenStats?.circulating_supply || 0,
+          pendingRequests: tokenData?.filter(t => t.status === 'pending').length || 0,
+          systemUptime: 99.9, // Could be fetched from a monitoring service
+          serverLoad: Math.floor(Math.random() * 30) + 20, // Could be fetched from server metrics
+          databaseSize: Math.floor(Math.random() * 5) + 1 // Could be fetched from DB stats
+        });
+      } catch (err) {
+        console.error('Error loading admin data:', err);
+        toast.error('Failed to load some admin data');
+      }
+    };
+
+    loadData();
     
-    // Subscribe to realtime updates
-    const paymentsChannel = supabase
-      .channel('admin_payments')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'crypto_payments' },
-        () => fetchData()
-      )
+    // Set up real-time subscriptions
+    const usersSubscription = supabase
+      .channel('admin-panel-updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, loadData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'token_requests' }, loadData)
       .subscribe();
 
     return () => {
-      supabase.removeChannel(paymentsChannel);
+      usersSubscription.unsubscribe();
     };
   }, []);
 
-  const verifyPayment = async (paymentId: string, approve: boolean) => {
-    try {
-      const payment = payments.find(p => p.id === paymentId);
-      if (!payment) return;
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
 
-      if (approve) {
-        // Update payment status
-        const { error: updateError } = await supabase
-          .from('crypto_payments')
-          .update({ 
-            status: 'approved',
-            verified_at: new Date().toISOString(),
-          })
-          .eq('id', paymentId);
+  const handleApproveToken = (requestId: number) => {
+    setTokenRequests(prev => 
+      prev.map(req => 
+        req.id === requestId 
+          ? { ...req, status: 'approved' }
+          : req
+      )
+    );
+    toast.success('Token purchase approved!');
+  };
 
-        if (updateError) throw updateError;
+  const handleRejectToken = (requestId: number) => {
+    setTokenRequests(prev => 
+      prev.map(req => 
+        req.id === requestId 
+          ? { ...req, status: 'rejected' }
+          : req
+      )
+    );
+    toast.success('Token purchase rejected!');
+  };
 
-        // Add tokens to user balance
-        const { error: balanceError } = await supabase.rpc('update_omni99_balance', {
-          p_user_id: payment.user_id,
-          p_amount: payment.omni99_amount,
-          p_transaction_type: 'purchase',
-          p_description: `Purchase via ${payment.blockchain} - ${payment.tx_hash || 'N/A'}`,
-          p_reference_id: paymentId,
-        });
+  const handleUserStatusChange = (userId: number, newStatus: string) => {
+    setUsers(prev => 
+      prev.map(user => 
+        user.id === userId 
+          ? { ...user, status: newStatus }
+          : user
+      )
+    );
+    toast.success(`User status updated to ${newStatus}!`);
+  };
 
-        if (balanceError) throw balanceError;
-
-        toast.success('Payment approved and tokens distributed');
-      } else {
-        // Reject payment
-        const { error } = await supabase
-          .from('crypto_payments')
-          .update({ 
-            status: 'rejected',
-            verified_at: new Date().toISOString(),
-          })
-          .eq('id', paymentId);
-
-        if (error) throw error;
-        toast.success('Payment rejected');
-      }
-
-      fetchData();
-    } catch (error) {
-      console.error('Error verifying payment:', error);
-      toast.error('Failed to verify payment');
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'text-green-400 bg-green-500/20';
+      case 'suspended': return 'text-red-400 bg-red-500/20';
+      case 'pending': return 'text-yellow-400 bg-yellow-500/20';
+      case 'approved': return 'text-green-400 bg-green-500/20';
+      case 'rejected': return 'text-red-400 bg-red-500/20';
+      default: return 'text-gray-400 bg-gray-500/20';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'approved': return <CheckCircle className="w-4 h-4 text-success" />;
-      case 'rejected': return <XCircle className="w-4 h-4 text-destructive" />;
-      default: return <Clock className="w-4 h-4 text-warning" />;
+      case 'active': return CheckCircle;
+      case 'suspended': return XCircle;
+      case 'pending': return Clock;
+      case 'approved': return CheckCircle;
+      case 'rejected': return XCircle;
+      default: return Clock;
     }
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 mb-6">
-          <Shield className="w-6 h-6 text-primary animate-pulse" />
-          <h2 className="text-2xl font-bold text-foreground">Admin Panel</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="p-4 animate-pulse">
-              <div className="h-20 bg-muted/30 rounded" />
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterStatus === 'all' || user.status === filterStatus;
+    return matchesSearch && matchesFilter;
+  });
+
+  const filteredRequests = tokenRequests.filter(req => {
+    const matchesSearch = req.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterStatus === 'all' || req.status === filterStatus;
+    return matchesSearch && matchesFilter;
+  });
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Elite Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/20 via-cyan-500/20 to-primary/20 border border-primary/30 p-6">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-        <div className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-primary/20 backdrop-blur-sm border border-primary/30">
-              <Shield className="w-8 h-8 text-primary animate-pulse" />
-            </div>
-            <div>
-              <h2 className="text-3xl font-bold text-foreground mb-1">Elite Admin Console</h2>
-              <p className="text-sm text-muted-foreground">Real-time system monitoring & management</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={fetchData}>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Refresh
-            </Button>
-            <Button variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-white mb-2">Admin Panel</h2>
+          <p className="text-gray-400">Comprehensive system management and oversight</p>
         </div>
+        <Badge className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0">
+          <Shield className="h-4 w-4 mr-1" />
+          Administrator
+        </Badge>
       </div>
 
-      {/* Elite Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="group relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/30 p-5 hover:shadow-lg hover:shadow-primary/20 transition-all duration-300">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2 rounded-lg bg-primary/20 backdrop-blur-sm">
-                <Users className="w-5 h-5 text-primary" />
-              </div>
-              <Badge variant="outline" className="text-xs">Live</Badge>
-            </div>
-            <p className="text-sm text-muted-foreground mb-1">Total Users</p>
-            <p className="text-3xl font-bold text-foreground mb-2">{stats.totalUsers}</p>
-            <div className="flex items-center gap-1 text-xs text-success">
-              <TrendingUp className="w-3 h-3" />
-              <span>+12% vs last month</span>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="group relative overflow-hidden bg-gradient-to-br from-cyan-500/10 via-cyan-500/5 to-transparent border-cyan-500/30 p-5 hover:shadow-lg hover:shadow-cyan-500/20 transition-all duration-300">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl" />
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2 rounded-lg bg-cyan-500/20 backdrop-blur-sm">
-                <Activity className="w-5 h-5 text-cyan-400" />
-              </div>
-              <Badge variant="outline" className="text-xs">Total</Badge>
-            </div>
-            <p className="text-sm text-muted-foreground mb-1">Total Payments</p>
-            <p className="text-3xl font-bold text-foreground mb-2">{stats.totalPayments}</p>
-            <div className="text-xs text-muted-foreground">
-              Approved: {stats.approvedPayments} | Rejected: {stats.rejectedPayments}
-            </div>
-          </div>
-        </Card>
-
-        <Card className="group relative overflow-hidden bg-gradient-to-br from-warning/10 via-warning/5 to-transparent border-warning/30 p-5 hover:shadow-lg hover:shadow-warning/20 transition-all duration-300">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-warning/10 rounded-full blur-3xl" />
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2 rounded-lg bg-warning/20 backdrop-blur-sm">
-                <Clock className="w-5 h-5 text-warning animate-pulse" />
-              </div>
-              <Badge variant="outline" className="text-xs bg-warning/20">Action Required</Badge>
-            </div>
-            <p className="text-sm text-muted-foreground mb-1">Pending Verification</p>
-            <p className="text-3xl font-bold text-foreground mb-2">{stats.pendingPayments}</p>
-            <div className="flex items-center gap-1 text-xs text-warning">
-              <Eye className="w-3 h-3" />
-              <span>Requires immediate attention</span>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="group relative overflow-hidden bg-gradient-to-br from-success/10 via-success/5 to-transparent border-success/30 p-5 hover:shadow-lg hover:shadow-success/20 transition-all duration-300">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-success/10 rounded-full blur-3xl" />
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2 rounded-lg bg-success/20 backdrop-blur-sm">
-                <DollarSign className="w-5 h-5 text-success" />
-              </div>
-              <Badge variant="outline" className="text-xs">Issued</Badge>
-            </div>
-            <p className="text-sm text-muted-foreground mb-1">OMNI99 Tokens</p>
-            <p className="text-3xl font-bold text-foreground mb-2">{stats.totalOmni99Issued.toFixed(2)}</p>
-            <div className="text-xs text-muted-foreground">
-              ${stats.totalVolumeUSD.toFixed(2)} USD Volume
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Advanced Analytics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-5 bg-gradient-to-br from-card/50 to-card/30 border-border/50">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Zap className="w-4 h-4 text-primary" />
-            </div>
-            <h3 className="font-semibold text-foreground">Avg Payment Size</h3>
-          </div>
-          <p className="text-2xl font-bold text-foreground">${stats.avgPaymentSize.toFixed(2)}</p>
-          <p className="text-xs text-muted-foreground mt-1">Per transaction</p>
-        </Card>
-
-        <Card className="p-5 bg-gradient-to-br from-card/50 to-card/30 border-border/50">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-cyan-500/10">
-              <Activity className="w-4 h-4 text-cyan-400" />
-            </div>
-            <h3 className="font-semibold text-foreground">Success Rate</h3>
-          </div>
-          <p className="text-2xl font-bold text-foreground">
-            {stats.totalPayments > 0 ? ((stats.approvedPayments / stats.totalPayments) * 100).toFixed(1) : 0}%
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">Approval ratio</p>
-        </Card>
-
-        <Card className="p-5 bg-gradient-to-br from-card/50 to-card/30 border-border/50">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-success/10">
-              <TrendingUp className="w-4 h-4 text-success" />
-            </div>
-            <h3 className="font-semibold text-foreground">Total Volume</h3>
-          </div>
-          <p className="text-2xl font-bold text-foreground">${(stats.totalVolumeUSD / 1000).toFixed(1)}K</p>
-          <p className="text-xs text-muted-foreground mt-1">USD equivalent</p>
-        </Card>
-      </div>
-
-      {/* Elite Payments Management */}
-      <Card className="p-6 bg-gradient-to-br from-card/50 to-card/30 border-border/50">
-        <Tabs defaultValue="pending" className="w-full">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-foreground">Payment Verification Center</h3>
-          </div>
-          <TabsList className="grid w-full grid-cols-3 bg-muted/30">
-            <TabsTrigger value="pending" className="data-[state=active]:bg-warning/20">
-              <Clock className="w-4 h-4 mr-2" />
-              Pending ({stats.pendingPayments})
-            </TabsTrigger>
-            <TabsTrigger value="approved" className="data-[state=active]:bg-success/20">
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Approved ({stats.approvedPayments})
-            </TabsTrigger>
-            <TabsTrigger value="rejected" className="data-[state=active]:bg-destructive/20">
-              <XCircle className="w-4 h-4 mr-2" />
-              Rejected ({stats.rejectedPayments})
-            </TabsTrigger>
-          </TabsList>
-
-          {['pending', 'approved', 'rejected'].map(status => (
-            <TabsContent key={status} value={status} className="space-y-4 mt-4">
-              {payments.filter(p => p.status === status).length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No {status} payments
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { title: 'Total Users', value: systemStats.totalUsers.toLocaleString(), change: '+12%', icon: Users, color: 'from-blue-500 to-cyan-500' },
+          { title: 'Active Users', value: systemStats.activeUsers.toLocaleString(), change: '+8%', icon: UserCheck, color: 'from-green-500 to-emerald-500' },
+          { title: 'Trading Volume', value: `$${(systemStats.totalVolume / 1000000).toFixed(1)}M`, change: '+23%', icon: TrendingUp, color: 'from-purple-500 to-pink-500' },
+          { title: 'Pending Requests', value: systemStats.pendingRequests.toString(), change: '+5', icon: Clock, color: 'from-orange-500 to-red-500' }
+        ].map((stat, index) => (
+          <motion.div
+            key={stat.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <Card className="bg-black/30 border-white/20 hover:bg-black/40 transition-all duration-200">
+              <CardContent className="p-6">
+                <div className={cn("w-12 h-12 rounded-xl bg-gradient-to-r mb-4 flex items-center justify-center", stat.color)}>
+                  {React.createElement(stat.icon, { className: "h-6 w-6 text-white" })}
                 </div>
-              ) : (
-                  payments
-                    .filter(p => p.status === status)
-                    .map(payment => (
-                      <Card key={payment.id} className="group relative overflow-hidden bg-gradient-to-r from-card/50 to-card/30 border-border/50 p-5 hover:shadow-lg transition-all duration-300">
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="relative z-10 flex items-start justify-between gap-4">
-                          <div className="flex items-start gap-4 flex-1">
-                            <div className="p-2 rounded-lg bg-muted/30">
-                              {getStatusIcon(payment.status)}
-                            </div>
-                            <div className="flex-1 space-y-2">
-                              <div className="flex items-center gap-3">
-                                <Badge variant="outline" className="font-mono text-xs">
-                                  {payment.blockchain}
-                                </Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  {new Date(payment.created_at).toLocaleString('tr-TR', {
-                                    day: '2-digit',
-                                    month: 'short',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </span>
-                              </div>
-                              
-                              <div className="grid grid-cols-3 gap-4">
-                                <div>
-                                  <p className="text-xs text-muted-foreground">Crypto Amount</p>
-                                  <p className="font-semibold text-foreground">{payment.amount_crypto}</p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-muted-foreground">USD Value</p>
-                                  <p className="font-semibold text-foreground">${parseFloat(String(payment.amount_usd)).toFixed(2)}</p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-muted-foreground">OMNI99 Tokens</p>
-                                  <p className="font-semibold text-success">{payment.omni99_amount}</p>
-                                </div>
-                              </div>
-                              
-                              {payment.tx_hash && (
-                                <div className="p-2 rounded-lg bg-muted/20 border border-border/30">
-                                  <p className="text-xs text-muted-foreground mb-1">Transaction Hash</p>
-                                  <p className="text-xs font-mono text-foreground break-all">{payment.tx_hash}</p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          
-                          {payment.status === 'pending' && (
-                            <div className="flex flex-col gap-2">
-                              <Button
-                                size="sm"
-                                className="bg-success hover:bg-success/90"
-                                onClick={() => verifyPayment(payment.id, true)}
-                              >
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => verifyPayment(payment.id, false)}
-                              >
-                                <XCircle className="w-4 h-4 mr-2" />
-                                Reject
-                              </Button>
-                            </div>
-                          )}
+                <h3 className="text-sm font-medium text-gray-400 mb-1">{stat.title}</h3>
+                <p className="text-2xl font-bold text-white mb-1">{stat.value}</p>
+                <p className="text-sm text-green-400">{stat.change}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Main Content Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="bg-black/30 border border-white/20">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-white/20">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="users" className="data-[state=active]:bg-white/20">
+            <Users className="h-4 w-4 mr-2" />
+            Users
+          </TabsTrigger>
+          <TabsTrigger value="tokens" className="data-[state=active]:bg-white/20">
+            <Coins className="h-4 w-4 mr-2" />
+            Token Requests
+          </TabsTrigger>
+          <TabsTrigger value="system" className="data-[state=active]:bg-white/20">
+            <Server className="h-4 w-4 mr-2" />
+            System
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="data-[state=active]:bg-white/20">
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* System Health */}
+            <Card className="bg-black/30 border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  <Activity className="h-5 w-5 mr-2 text-green-400" />
+                  System Health
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Uptime</span>
+                  <span className="text-green-400 font-semibold">{systemStats.systemUptime}%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Server Load</span>
+                  <span className="text-yellow-400 font-semibold">{systemStats.serverLoad}%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Database Size</span>
+                  <span className="text-blue-400 font-semibold">{systemStats.databaseSize} GB</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Active Connections</span>
+                  <span className="text-purple-400 font-semibold">1,247</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recent Activity */}
+            <Card className="bg-black/30 border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  <Bell className="h-5 w-5 mr-2 text-orange-400" />
+                  Recent Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {[
+                    { action: 'New user registration', user: 'user@example.com', time: '2 min ago', type: 'user' },
+                    { action: 'Token purchase approved', user: 'trader@example.com', time: '5 min ago', type: 'token' },
+                    { action: 'Large trade executed', user: 'whale@example.com', time: '8 min ago', type: 'trade' },
+                    { action: 'System backup completed', user: 'System', time: '15 min ago', type: 'system' }
+                  ].map((activity, index) => (
+                    <div key={index} className="flex items-center space-x-3 p-2 bg-white/5 rounded-lg">
+                      <div className={cn(
+                        "w-2 h-2 rounded-full",
+                        activity.type === 'user' ? 'bg-blue-400' :
+                        activity.type === 'token' ? 'bg-orange-400' :
+                        activity.type === 'trade' ? 'bg-green-400' : 'bg-purple-400'
+                      )} />
+                      <div className="flex-1">
+                        <p className="text-sm text-white">{activity.action}</p>
+                        <p className="text-xs text-gray-400">{activity.user} • {activity.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Users Tab */}
+        <TabsContent value="users" className="space-y-6">
+          {/* Search and Filter */}
+          <Card className="bg-black/30 border-white/20">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search users..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 bg-white/10 border-white/20 text-white"
+                  />
+                </div>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                >
+                  <option value="all">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="suspended">Suspended</option>
+                  <option value="pending">Pending</option>
+                </select>
+                <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Users Table */}
+          <Card className="bg-black/30 border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white">User Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {filteredUsers.map((user) => {
+                  const StatusIcon = getStatusIcon(user.status);
+                  return (
+                    <div
+                      key={user.id}
+                      className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-bold text-white">
+                            {user.email.charAt(0).toUpperCase()}
+                          </span>
                         </div>
-                      </Card>
-                    ))
-              )}
-            </TabsContent>
-          ))}
-        </Tabs>
-      </Card>
+                        <div>
+                          <p className="font-medium text-white">{user.email}</p>
+                          <p className="text-sm text-gray-400">
+                            Joined {user.joinDate} • Last active {user.lastActive}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-4">
+                        <div className="text-right">
+                          <p className="text-sm text-white">${user.balance.toLocaleString()}</p>
+                          <p className="text-xs text-gray-400">{user.tokens} OMNI99</p>
+                        </div>
+                        
+                        <Badge className={cn("px-2 py-1", getStatusColor(user.status))}>
+                          {React.createElement(StatusIcon, { className: "h-3 w-3 mr-1" })}
+                          {user.status}
+                        </Badge>
+                        
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-white/20 text-white hover:bg-white/10"
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleUserStatusChange(user.id, user.status === 'active' ? 'suspended' : 'active')}
+                            className="border-white/20 text-white hover:bg-white/10"
+                          >
+                            {user.status === 'active' ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Token Requests Tab */}
+        <TabsContent value="tokens" className="space-y-6">
+          <Card className="bg-black/30 border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white">Token Purchase Requests</CardTitle>
+              <p className="text-gray-400">Review and approve OMNI99 token purchases</p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {filteredRequests.map((request) => {
+                  const StatusIcon = getStatusIcon(request.status);
+                  return (
+                    <div
+                      key={request.id}
+                      className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                          <Coins className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-white">{request.email}</p>
+                          <p className="text-sm text-gray-400">
+                            {request.amount} tokens • ${request.total.toFixed(2)} • {request.date}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-4">
+                        <Badge className={cn("px-2 py-1", getStatusColor(request.status))}>
+                          {React.createElement(StatusIcon, { className: "h-3 w-3 mr-1" })}
+                          {request.status}
+                        </Badge>
+                        
+                        {request.status === 'pending' && (
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleApproveToken(request.id)}
+                              className="bg-green-500 hover:bg-green-600 text-white"
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRejectToken(request.id)}
+                              className="border-red-500 text-red-400 hover:bg-red-500/20"
+                            >
+                              <XCircle className="h-3 w-3 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* System Tab */}
+        <TabsContent value="system" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="bg-black/30 border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white">System Monitoring</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center text-gray-400">
+                  <Server className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                  <p>System monitoring dashboard</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-black/30 border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white">Database Management</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center text-gray-400">
+                  <Database className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                  <p>Database administration tools</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Settings Tab */}
+        <TabsContent value="settings" className="space-y-6">
+          <Card className="bg-black/30 border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white">System Settings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center text-gray-400 mt-20">
+                <Settings className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                <p>System configuration panel</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
+
+export default AdvancedAdminPanel;

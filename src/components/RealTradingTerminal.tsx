@@ -1,5 +1,4 @@
-import React, { useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,17 +22,9 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { executeTrade } from '@/lib/trade';
-import { WalletComponent } from './wallet/WalletComponent';
-import { ExchangeTools } from './exchange-specific/ExchangeTools';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-import { supabase } from '@/lib/supabase';
-import { MarketSpecificTools } from './exchange-specific/MarketSpecificTools';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
 import { User } from '@supabase/supabase-js';
 import { WalletComponent } from './wallet/WalletComponent';
-import { ExchangeTools } from './exchange-specific/ExchangeTools';
+import { ExchangeToolsFactory } from './exchange-specific/ExchangeToolsFactory';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface RealTradingTerminalProps {

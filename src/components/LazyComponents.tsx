@@ -19,6 +19,11 @@ interface TradingViewChartProps {
   height?: string | number;
 }
 
+interface MarketToolsProps {
+  symbol: string;
+  userId: string;
+}
+
 // Trading Components
 const importOrderPanel = () => import('./trading/OrderPanel')
   .then(mod => ({ default: mod.OrderPanel as ComponentType<OrderPanelProps> }));
@@ -29,6 +34,13 @@ const importTradingViewChart = () => import('./chart/TradingViewChart')
   .then(mod => ({ default: mod.TradingViewChart as ComponentType<TradingViewChartProps> }));
 export const TradingViewChart = lazy<ComponentType<TradingViewChartProps>>(importTradingViewChart);
 
-// Advanced Admin Panel
-const importAdvancedAdminPanel = () => import('./AdvancedAdminPanel');
-export const AdvancedAdminPanel = lazy(() => importAdvancedAdminPanel());
+// Market Tools Components
+// Market Tools Components
+export const ForexMarketTools = lazy(() => import('./market-specific/forex/ForexMarketTools')
+  .then(mod => ({ default: mod.ForexMarketTools as ComponentType<MarketToolsProps> })));
+
+export const CommodityMarketTools = lazy(() => import('./market-specific/commodities/CommodityMarketTools')
+  .then(mod => ({ default: mod.CommodityMarketTools as ComponentType<MarketToolsProps> })));
+
+// Admin Panel
+export const AdminPanel = lazy(() => import('./admin/AdminPanel'));

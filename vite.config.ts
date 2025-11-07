@@ -22,18 +22,13 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor-core': [
+          'vendor': [
             'react',
             'react-dom',
-            'react-router-dom'
-          ],
-          'vendor-features': [
+            'react-router-dom',
             '@tanstack/react-query',
             'framer-motion',
-            'lightweight-charts'
-          ],
-
-          'vendor-ui': [
+            'lightweight-charts',
             '@radix-ui/react-alert-dialog',
             '@radix-ui/react-dialog',
             '@radix-ui/react-dropdown-menu',
@@ -43,57 +38,40 @@ export default defineConfig({
             '@radix-ui/react-label',
             '@radix-ui/react-select',
             '@radix-ui/react-tabs',
-            '@radix-ui/react-checkbox'
-          ],
-          'vendor-crypto': [
+            '@radix-ui/react-checkbox',
             'crypto-js'
           ],
-          'trading-orders-wrapper': [
-            './src/components/trading/order/OrderPanelWrapper'
-          ],
-          'trading-core': [
+          'trading': [
+            './src/components/trading/order/OrderPanelWrapper',
             './src/components/trading/OrderPanel',
             './src/components/trading/OrderBook',
             './src/components/trading/MarketSelector',
             './src/components/trading/PriceDisplay',
             './src/components/trading/MarketSummary',
-            './src/components/trading/TradingAlerts'
-          ],
-          'chart-features': [
+            './src/components/trading/TradingAlerts',
             './src/components/chart/TradingViewChart',
             './src/components/chart/MainChartArea',
             './src/components/trading/depth/DepthChartContainer',
             './src/components/trading/depth/DepthChartGraph',
+            './src/components/trading/TradeFeed',
+            './src/components/trading/NewsFeed',
+            './src/components/trading/TradingSignals',
+            './src/components/trading/AdvancedOrderTypes',
+            './src/components/trading/RiskCalculator',
+            './src/components/trading/Terminal',
+            './src/components/trading/ForexAdvancedTools',
+            './src/components/trading/MarketSpecificTools'
+          ],
+          'charts': [
             './src/components/trading/VolumeChart',
             './src/components/trading/DrawingTools',
             './src/components/trading/IndicatorControls',
             'apexcharts',
             'react-apexcharts'
           ],
-          'trading-feeds': [
-            './src/components/trading/TradeFeed',
-            './src/components/trading/NewsFeed',
-            './src/components/trading/TradingSignals'
-          ],
-          'trading-advanced-orders': [
-            './src/components/trading/AdvancedOrderTypes',
-            './src/components/trading/RiskCalculator'
-          ],
-          'trading-terminal': [
-
-            './src/components/trading/Terminal'
-          ],
-          'trading-tools': [
-            './src/components/trading/ForexAdvancedTools',
-            './src/components/trading/MarketSpecificTools'
-          ],
-          'admin-dashboard': [
+          'admin': [
             './src/components/admin/AdminPanel'
-          ],
-          'admin-core': [
-            './src/components/admin/AdvancedAdminPanelWrapper',
-            './src/components/AdvancedAdminPanel'
-          ],
+          ]
 
         },
         entryFileNames: `assets/[name].${Date.now()}.[hash].js`,
