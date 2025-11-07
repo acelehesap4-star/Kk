@@ -8,7 +8,6 @@ import { CandlestickPatterns } from '@/components/trading/CandlestickPatterns';
 import { PerformanceMetrics } from '@/components/trading/PerformanceMetrics';
 import { QuickStats } from '@/components/trading/QuickStats';
 import { TradingSignals } from '@/components/trading/TradingSignals';
-import { AdvancedTerminal } from '@/components/trading/AdvancedTerminal';
 import { Timeframe, IndicatorSettings, CandlestickPattern, Candle } from '@/types/trading';
 
 interface LeftSidebarProps {
@@ -73,8 +72,6 @@ export const LeftSidebar = memo(({
       <QuickStats symbol={activeSymbol} price={lastPrice} />
 
       <TradingSignals candles={candles} symbol={activeSymbol} />
-
-      <AdvancedTerminal logs={logs} />
     </aside>
   );
 });

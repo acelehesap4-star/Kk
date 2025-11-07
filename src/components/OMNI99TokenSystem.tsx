@@ -24,9 +24,10 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { User } from '@supabase/supabase-js';
 
 interface OMNI99TokenSystemProps {
-  user: any;
+  user: User;
 }
 
 const OMNI99TokenSystem: React.FC<OMNI99TokenSystemProps> = ({ user }) => {

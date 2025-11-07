@@ -39,8 +39,10 @@ import NotificationSystem from './notifications/NotificationSystem';
 import { ThemeToggle } from './ui/ThemeToggle';
 import { useRealMarketData } from '@/hooks/useRealMarketData';
 
+import { User } from '@supabase/supabase-js';
+
 interface ModernTradingInterfaceProps {
-  user: any;
+  user: User;
   onLogout: () => void;
 }
 

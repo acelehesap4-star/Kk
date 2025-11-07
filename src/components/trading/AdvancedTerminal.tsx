@@ -3,9 +3,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useAccount, useBalance, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi';
-import { parseEther } from 'viem';
-import { toast } from 'sonner';
 import { Terminal as TerminalIcon, Send, Zap } from 'lucide-react';
 import { useRealBalance } from '@/hooks/useRealBalance';
 import { realExchangeConnector } from '@/lib/realExchangeConnector';
@@ -33,37 +30,19 @@ interface AdvancedTerminalProps {
 }
 
 export const AdvancedTerminal = memo(({ logs: externalLogs = [], userId }: AdvancedTerminalProps) => {
-  const [logs, setLogs] = useState<TerminalLog[]>(externalLogs);
+  const [logs, setLogs] = useState<TerminalLog[]>([]);
   const [command, setCommand] = useState('');
   const [positions, setPositions] = useState<Position[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const { address, isConnected } = useAccount();
-  const { data: walletBalance } = useBalance({ address });
-  const { sendTransaction, data: txHash } = useSendTransaction();
-  const { isSuccess: txSuccess } = useWaitForTransactionReceipt({ hash: txHash });
   
-  // Real balance hook
   const { balance: realBalance, loading: balanceLoading } = useRealBalance(userId || '');
-
-  useEffect(() => {
-    if (externalLogs.length > 0) {
-      setLogs(prev => [...prev, ...externalLogs]);
-    }
-  }, [externalLogs]);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [logs]);
-
-  useEffect(() => {
-    if (txSuccess) {
-      addLog('Transaction confirmed successfully!', 'success');
-    }
-  }, [txSuccess]);
 
   useEffect(() => {
     addLog('🚀 Advanced Trading Terminal initialized', 'success');
@@ -74,73 +53,7 @@ export const AdvancedTerminal = memo(({ logs: externalLogs = [], userId }: Advan
     setLogs(prev => [...prev, { message, level, timestamp: new Date() }]);
   };
 
-  const executeTrade = async (
-    exchange: string,
-    symbol: string,
-    side: 'long' | 'short',
-    amount: number,
-    price: number
-  ) => {
-    const cost = amount * price;
-    if (cost > realBalance.available) {
-      addLog(`❌ Insufficient balance. Required: $${cost.toFixed(2)}, Available: $${realBalance.available.toFixed(2)}`, 'error');
-      return;
-    }
-
-    try {
-      // Execute real trade through exchange connector
-      const orderSide = side === 'long' ? 'buy' : 'sell';
-      await realExchangeConnector.placeOrder(exchange, userId || '', {
-        symbol: symbol.replace('/', ''),
-        side: orderSide,
-        type: 'market',
-        amount,
-        price
-      });
-
-      const newPosition: Position = {
-        exchange,
-        symbol,
-        side,
-        entryPrice: price,
-        amount,
-        currentPrice: price,
-        pnl: 0,
-        pnlPercent: 0
-      };
-
-      setPositions(prev => [...prev, newPosition]);
-      addLog(`✅ ${side.toUpperCase()} ${amount} ${symbol} @ $${price} on ${exchange}`, 'trade');
-      addLog(`Real trade executed successfully`, 'success');
-    } catch (error) {
-      addLog(`❌ Trade execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
-    }
-  };
-
-  const closePosition = async (index: number) => {
-    const pos = positions[index];
-    const profit = (pos.currentPrice - pos.entryPrice) * pos.amount * (pos.side === 'long' ? 1 : -1);
-    
-    try {
-      // Close real position through exchange connector
-      const orderSide = pos.side === 'long' ? 'sell' : 'buy';
-      await realExchangeConnector.placeOrder(pos.exchange, userId || '', {
-        symbol: pos.symbol.replace('/', ''),
-        side: orderSide,
-        type: 'market',
-        amount: pos.amount,
-        price: pos.currentPrice
-      });
-
-      setPositions(prev => prev.filter((_, i) => i !== index));
-      addLog(`📊 Closed ${pos.side.toUpperCase()} ${pos.symbol} position. P&L: $${profit.toFixed(2)}`, profit >= 0 ? 'success' : 'error');
-      addLog(`Position closed successfully on ${pos.exchange}`, 'success');
-    } catch (error) {
-      addLog(`❌ Failed to close position: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
-    }
-  };
-
-  const handleCommand = () => {
+  const handleCommand = async () => {
     if (!command.trim()) return;
 
     addLog(`> ${command}`, 'info');
@@ -154,135 +67,12 @@ export const AdvancedTerminal = memo(({ logs: externalLogs = [], userId }: Advan
           addLog('  buy <exchange> <symbol> <amount> - Execute real buy order', 'info');
           addLog('  sell <exchange> <symbol> <amount> - Execute real sell order', 'info');
           addLog('  positions - Show all open positions', 'info');
-          addLog('  balance - Show real trading balance and OMNI99 tokens', 'info');
+          addLog('  balance - Show real trading balance', 'info');
           addLog('  close <index> - Close position by index', 'info');
-          addLog('  wallet - Show Web3 wallet info', 'info');
-          addLog('  send <address> <amount> - Send crypto (Web3)', 'info');
-          addLog('  buyomni99 <amount> - Purchase OMNI99 tokens', 'info');
           addLog('  market <symbol> - Get real market price', 'info');
           addLog('  exchanges - List connected exchanges', 'info');
           addLog('  clear - Clear terminal', 'info');
           break;
-
-        case 'buy':
-        case 'long': {
-          const [, exchange = 'binance', symbol = 'BTCUSDT', amountStr = '0.01'] = parts;
-          const amount = parseFloat(amountStr);
-          const price = 67890 + Math.random() * 1000;
-          executeTrade(exchange, symbol, 'long', amount, price);
-          break;
-        }
-
-        case 'sell':
-        case 'short': {
-          const [, exchange = 'binance', symbol = 'BTCUSDT', amountStr = '0.01'] = parts;
-          const amount = parseFloat(amountStr);
-          const price = 67890 + Math.random() * 1000;
-          executeTrade(exchange, symbol, 'short', amount, price);
-          break;
-        }
-
-        case 'positions':
-          if (positions.length === 0) {
-            addLog('No open positions', 'info');
-          } else {
-            addLog('📈 Open Positions:', 'info');
-            positions.forEach((pos, i) => {
-              addLog(
-                `  [${i}] ${pos.exchange.toUpperCase()} ${pos.symbol} ${pos.side.toUpperCase()} | Entry: $${pos.entryPrice.toFixed(2)} | Amount: ${pos.amount} | P&L: $${pos.pnl.toFixed(2)} (${pos.pnlPercent.toFixed(2)}%)`,
-                pos.pnl >= 0 ? 'success' : 'error'
-              );
-            });
-          }
-          break;
-
-        case 'close': {
-          const index = parseInt(parts[1]);
-          if (isNaN(index) || index < 0 || index >= positions.length) {
-            addLog('❌ Invalid position index', 'error');
-          } else {
-            closePosition(index);
-          }
-          break;
-        }
-
-        case 'balance':
-          if (balanceLoading) {
-            addLog('⏳ Loading balance...', 'info');
-          } else {
-            addLog(`💰 Total Balance: $${realBalance.total.toFixed(2)}`, 'success');
-            addLog(`💵 Available: $${realBalance.available.toFixed(2)}`, 'success');
-            addLog(`🔒 Locked: $${realBalance.locked.toFixed(2)}`, 'success');
-            addLog(`🪙 OMNI99 Balance: ${realBalance.omni99.toFixed(2)} OMNI99`, 'success');
-            
-            // Show top assets
-            const topAssets = Object.entries(realBalance.assets)
-              .filter(([_, data]) => data.total > 0)
-              .sort(([_, a], [__, b]) => b.total - a.total)
-              .slice(0, 5);
-            
-            if (topAssets.length > 0) {
-              addLog('📊 Top Assets:', 'info');
-              topAssets.forEach(([asset, data]) => {
-                addLog(`  ${asset}: ${data.total.toFixed(6)} (Free: ${data.free.toFixed(6)})`, 'info');
-              });
-            }
-          }
-          if (isConnected && walletBalance) {
-            addLog(`🔗 Wallet Balance: ${parseFloat(walletBalance.formatted).toFixed(4)} ${walletBalance.symbol}`, 'success');
-          }
-          break;
-
-        case 'wallet':
-          if (!isConnected) {
-            addLog('❌ Wallet not connected. Use the wallet button to connect.', 'error');
-          } else {
-            addLog(`🔗 Connected Wallet: ${address?.slice(0, 6)}...${address?.slice(-4)}`, 'success');
-            if (balance) {
-              addLog(`💎 Balance: ${parseFloat(balance.formatted).toFixed(4)} ${balance.symbol}`, 'success');
-            }
-          }
-          break;
-
-        case 'send': {
-          if (!isConnected) {
-            addLog('❌ Wallet not connected', 'error');
-            break;
-          }
-          const [, toAddress, amountStr] = parts;
-          if (!toAddress || !amountStr) {
-            addLog('❌ Usage: send <address> <amount>', 'error');
-            break;
-          }
-          try {
-            sendTransaction({
-              to: toAddress as `0x${string}`,
-              value: parseEther(amountStr)
-            });
-            addLog(`📤 Sending ${amountStr} to ${toAddress}...`, 'info');
-          } catch (error) {
-            addLog(`❌ Transaction failed: ${error}`, 'error');
-          }
-          break;
-        }
-
-        case 'buyomni99': {
-          const amount = parseFloat(parts[1] || '0');
-          if (amount <= 0) {
-            addLog('❌ Usage: buyomni99 <amount>', 'error');
-            break;
-          }
-          const cost = amount * 0.01;
-          if (cost > demoBalance) {
-            addLog(`❌ Insufficient balance. Required: $${cost.toFixed(2)}`, 'error');
-            break;
-          }
-          setDemoBalance(prev => prev - cost);
-          setOmni99Balance(prev => prev + amount);
-          addLog(`✅ Purchased ${amount} OMNI99 for $${cost.toFixed(2)}`, 'success');
-          addLog(`🪙 New OMNI99 Balance: ${omni99Balance + amount}`, 'success');
-          break;
-        }
 
         case 'market': {
           const symbol = parts[1] || 'BTCUSDT';
@@ -299,29 +89,58 @@ export const AdvancedTerminal = memo(({ logs: externalLogs = [], userId }: Advan
 
         case 'exchanges': {
           try {
-            const connectedExchanges = await realExchangeConnector.getConnectedExchanges(userId || '');
-            if (connectedExchanges.length === 0) {
-              addLog('❌ No exchanges connected. Please connect exchanges in settings.', 'error');
+            const exchanges = Object.entries(realExchangeConnector.getExchanges())
+              .filter(([_, config]) => config.isActive)
+              .map(([id, config]) => ({
+                name: config.name,
+                status: 'active'
+              }));
+
+            if (exchanges.length === 0) {
+              addLog('❌ No exchanges available.', 'error');
             } else {
-              addLog('🏦 Connected Exchanges:', 'success');
-              connectedExchanges.forEach(exchange => {
-                addLog(`  ✅ ${exchange.name.toUpperCase()} - ${exchange.status}`, 'success');
+              addLog('🏦 Available Exchanges:', 'success');
+              exchanges.forEach(exchange => {
+                addLog(`  ✅ ${exchange.name} - ${exchange.status}`, 'success');
               });
             }
-            
+
             addLog('', 'info');
-            addLog('🌐 Supported Exchanges:', 'info');
-            addLog('  • binance - Binance (Crypto)', 'info');
-            addLog('  • bybit - Bybit (Crypto)', 'info');
-            addLog('  • okx - OKX (Crypto)', 'info');
-            addLog('  • kucoin - KuCoin (Crypto)', 'info');
-            addLog('  • kraken - Kraken (Crypto)', 'info');
-            addLog('  • coinbase - Coinbase Pro (Crypto)', 'info');
+            addLog('🌐 Supported Exchange Types:', 'info');
+            addLog('  • Cryptocurrency', 'info');
+            addLog('  • Forex', 'info');
+            addLog('  • Stocks', 'info');
+            addLog('  • Commodities', 'info');
           } catch (error) {
             addLog(`❌ Error fetching exchanges: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
           }
           break;
         }
+
+        case 'balance':
+          if (balanceLoading) {
+            addLog('⏳ Loading balance...', 'info');
+          } else {
+            addLog(`💰 Total Balance: $${realBalance.total.toFixed(2)}`, 'success');
+            addLog(`💵 Available: $${realBalance.available.toFixed(2)}`, 'success');
+            addLog(`🔒 Locked: $${realBalance.locked.toFixed(2)}`, 'success');
+            
+            // Show top assets
+            if (realBalance.assets) {
+              const topAssets = Object.entries(realBalance.assets)
+                .filter(([_, data]) => data.total > 0)
+                .sort(([_, a], [__, b]) => b.total - a.total)
+                .slice(0, 5);
+              
+              if (topAssets.length > 0) {
+                addLog('📊 Top Assets:', 'info');
+                topAssets.forEach(([asset, data]) => {
+                  addLog(`  ${asset}: ${data.total.toFixed(6)} (Free: ${data.free.toFixed(6)})`, 'info');
+                });
+              }
+            }
+          }
+          break;
 
         case 'clear':
           setLogs([]);
@@ -361,7 +180,7 @@ export const AdvancedTerminal = memo(({ logs: externalLogs = [], userId }: Advan
               Advanced Trading Terminal
             </h4>
             <p className="text-[9px] text-muted-foreground font-mono">
-              Multi-Exchange | Web3 Enabled | Real-time Execution
+              Multi-Exchange | Real-time Execution
             </p>
           </div>
         </div>
@@ -376,11 +195,6 @@ export const AdvancedTerminal = memo(({ logs: externalLogs = [], userId }: Advan
             ) : (
               <>
                 Balance: ${realBalance.total.toFixed(2)}
-                {realBalance.omni99 > 0 && (
-                  <span className="ml-2 text-purple-400">
-                    | {realBalance.omni99.toFixed(2)} OMNI99
-                  </span>
-                )}
               </>
             )}
           </div>
@@ -432,7 +246,7 @@ export const AdvancedTerminal = memo(({ logs: externalLogs = [], userId }: Advan
           />
         </div>
         <Button
-          onClick={handleCommand}
+          onClick={() => handleCommand()}
           size="sm"
           className="px-4"
           disabled={!command.trim()}
@@ -450,5 +264,3 @@ export const AdvancedTerminal = memo(({ logs: externalLogs = [], userId }: Advan
     </Card>
   );
 });
-
-AdvancedTerminal.displayName = 'AdvancedTerminal';

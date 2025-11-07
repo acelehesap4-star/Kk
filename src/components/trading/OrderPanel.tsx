@@ -17,12 +17,7 @@ interface OrderPanelProps {
   exchange?: string;
 }
 
-export const OrderPanel = ({ 
-  symbol = 'BTCUSDT', 
-  currentPrice = 0,
-  assetType = 'crypto',
-  exchange = 'BINANCE'
-}: OrderPanelProps) => {
+export const OrderPanel = ({ symbol = "", currentPrice = 0, assetType = "crypto", exchange = "" }: OrderPanelProps) => {
   const [orderType, setOrderType] = useState('market');
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const [price, setPrice] = useState('');
@@ -414,3 +409,5 @@ export const OrderPanel = ({
     </div>
   );
 };
+
+export default OrderPanel;

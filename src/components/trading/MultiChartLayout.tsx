@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutGrid, Maximize2, Grid3x3, Columns2 } from 'lucide-react';
+import { LayoutGrid, Maximize2, Grid3x3, Columns } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -10,8 +10,8 @@ export const MultiChartLayout = () => {
 
   const layouts = [
     { id: 'single' as LayoutType, icon: Maximize2, label: 'Single', cols: 1 },
-    { id: 'dual-vertical' as LayoutType, icon: Columns2, label: 'Dual V', cols: 2 },
-    { id: 'dual-horizontal' as LayoutType, icon: Columns2, label: 'Dual H', cols: 1, rotate: true },
+    { id: 'dual-vertical' as LayoutType, icon: Columns, label: 'Dual V', cols: 2 },
+    { id: 'dual-horizontal' as LayoutType, icon: Columns, label: 'Dual H', cols: 1, rotate: true },
     { id: 'quad' as LayoutType, icon: Grid3x3, label: 'Quad', cols: 2 },
   ];
 

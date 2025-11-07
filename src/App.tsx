@@ -49,14 +49,6 @@ const App = () => {
     setLoginError('');
 
     try {
-            // Gerçek giriş işlemi
-      const { data: { user }, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) throw error;
-
       // Real Supabase login
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
