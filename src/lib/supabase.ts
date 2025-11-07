@@ -12,20 +12,90 @@ const isSupabaseConfigured = supabaseUrl &&
   supabaseAnonKey !== 'your-public-anon-key' &&
   supabaseAnonKey !== 'your_supabase_anon_key';
 
-// Create a mock client if Supabase is not configured
+// Demo admin credentials
+const DEMO_ADMIN = {
+  email: 'berkecansuskun1998@gmail.com',
+  password: '7892858a'
+};
+
+// Create a demo client with working authentication
 const createMockSupabaseClient = () => ({
   auth: {
-    signUp: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
-    signInWithPassword: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
-    signOut: () => Promise.resolve({ error: null }),
-    getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+    signUp: () => Promise.resolve({ data: null, error: { message: 'Demo mode: Sign up disabled' } }),
+    signInWithPassword: ({ email, password }: { email: string; password: string }) => {
+      if (email === DEMO_ADMIN.email && password === DEMO_ADMIN.password) {
+        const mockUser = {
+          id: 'demo-admin-id',
+          email: DEMO_ADMIN.email,
+          user_metadata: { role: 'admin' },
+          created_at: new Date().toISOString()
+        };
+        const mockSession = {
+          access_token: 'demo-access-token',
+          refresh_token: 'demo-refresh-token',
+          user: mockUser,
+          expires_at: Date.now() + 3600000 // 1 hour
+        };
+        
+        // Store session in localStorage for persistence
+        localStorage.setItem('supabase.auth.token', JSON.stringify(mockSession));
+        
+        return Promise.resolve({ 
+          data: { user: mockUser, session: mockSession }, 
+          error: null 
+        });
+      }
+      return Promise.resolve({ 
+        data: null, 
+        error: { message: 'Invalid email or password' } 
+      });
+    },
+    signOut: () => {
+      localStorage.removeItem('supabase.auth.token');
+      return Promise.resolve({ error: null });
+    },
+    getSession: () => {
+      const stored = localStorage.getItem('supabase.auth.token');
+      if (stored) {
+        try {
+          const session = JSON.parse(stored);
+          if (session.expires_at > Date.now()) {
+            return Promise.resolve({ data: { session }, error: null });
+          }
+        } catch (e) {
+          localStorage.removeItem('supabase.auth.token');
+        }
+      }
+      return Promise.resolve({ data: { session: null }, error: null });
+    },
+    onAuthStateChange: (callback: (event: string, session: any) => void) => {
+      // Check for existing session on load
+      const stored = localStorage.getItem('supabase.auth.token');
+      if (stored) {
+        try {
+          const session = JSON.parse(stored);
+          if (session.expires_at > Date.now()) {
+            setTimeout(() => callback('SIGNED_IN', session), 0);
+          }
+        } catch (e) {
+          localStorage.removeItem('supabase.auth.token');
+        }
+      }
+      
+      return { 
+        data: { 
+          subscription: { 
+            unsubscribe: () => {} 
+          } 
+        } 
+      };
+    }
   },
   from: () => ({
     select: () => Promise.resolve({ data: [], error: null }),
-    insert: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
-    update: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
-    delete: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } })
+    insert: () => Promise.resolve({ data: null, error: { message: 'Demo mode: Database operations disabled' } }),
+    update: () => Promise.resolve({ data: null, error: { message: 'Demo mode: Database operations disabled' } }),
+    delete: () => Promise.resolve({ data: null, error: { message: 'Demo mode: Database operations disabled' } })
   })
 });
 
