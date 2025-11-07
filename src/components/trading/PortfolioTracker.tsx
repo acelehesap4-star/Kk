@@ -66,9 +66,10 @@ export const PortfolioTracker = () => {
     fetchPositions();
 
     // Subscribe to position changes
-    const channel = supabase
-      .channel('position_changes')
-      .on('postgres_changes',
+    let channel: any = null;
+    try {
+      channel = supabase.channel('position_changes');
+      channel.on('postgres_changes',
         {
           event: '*',
           schema: 'public',
@@ -77,11 +78,19 @@ export const PortfolioTracker = () => {
         () => {
           fetchPositions();
         }
-      )
-      .subscribe();
+      ).subscribe();
+    } catch (error) {
+      console.error('Error subscribing to position changes:', error);
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        try {
+          supabase.removeChannel(channel);
+        } catch (error) {
+          console.error('Error removing channel:', error);
+        }
+      }
     };
   }, []);
 
