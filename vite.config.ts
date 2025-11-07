@@ -3,23 +3,23 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
 export default defineConfig({
-  base: "/B/",
+  base: "/Kk/",
   plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src")
     }
   },
+  server: {
+    host: "0.0.0.0",
+    port: 12000,
+    cors: true
+  },
   build: {
     outDir: "docs",
     emptyOutDir: true,
     chunkSizeWarningLimit: 500,
     rollupOptions: {
-      external: [
-        './src/components/trading/OrderPanel.tsx',
-        './src/components/trading/CryptoAdvancedTools.tsx',
-        './src/components/trading/MarketAnalysis.tsx'
-      ],
       output: {
         manualChunks: {
           'vendor-core': [
