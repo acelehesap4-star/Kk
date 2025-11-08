@@ -1,9 +1,8 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
-import { LoadingSpinner } from './components/ui/loading-spinner';
+import { lazy } from 'react';
 import App from './App';
 
-const AuthPage = lazy(() => import('./pages/auth'));
+// Lazy-loaded components
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const TradingTerminal = lazy(() => import('./pages/TradingTerminal'));
 const Wallet = lazy(() => import('./pages/Wallet'));

@@ -49,12 +49,31 @@ const AppContent = () => {
 };
 
 const App = () => {
+  const location = useLocation();
+  const showNav = !location.pathname.includes('/auth');
+
   return (
     <ThemeProvider defaultTheme="dark" storageKey="trading-ui-theme">
       <QueryClientProvider client={queryClient}>
         <TradingProvider>
           <TooltipProvider>
-            <AppContent />
+            <div className="min-h-screen bg-background">
+              {showNav && (
+                <div className="border-b">
+                  <div className="flex h-16 items-center px-4">
+                    <MainNav />
+                    <div className="ml-auto flex items-center space-x-4">
+                      <UserNav />
+                    </div>
+                  </div>
+                </div>
+              )}
+              <main className="container mx-auto py-6">
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Outlet />
+                </Suspense>
+              </main>
+            </div>
             <Toaster />
             <Sonner />
           </TooltipProvider>
@@ -62,6 +81,5 @@ const App = () => {
       </QueryClientProvider>
     </ThemeProvider>
   );
-};
 
 export default App;
