@@ -1,7 +1,10 @@
-export const SUPPORTED_COLD_WALLETS = {
-  BTC: import.meta.env.VITE_BTC_COLD_WALLET || 'bc1pzmdep9lzgzswy0nmepvwmexj286kufcfwjfy4fd6dwuedzltntxse9xmz8',
-  SOL: import.meta.env.VITE_SOL_COLD_WALLET || 'Gp4itYBqqkNRNYtC22QAPdThPB6Kzx8M1yy2rpXBGxbc',
-  TRX: import.meta.env.VITE_TRX_COLD_WALLET || 'THbevzbdxMmUNaN3XFWPkaJe8oSq2C2739',
+export const INITIAL_ADMIN = {export const SUPPORTED_COLD_WALLETS = {
+
+  email: 'berkecansuskun1998@gmail.com',  BTC: import.meta.env.VITE_BTC_COLD_WALLET || 'bc1pzmdep9lzgzswy0nmepvwmexj286kufcfwjfy4fd6dwuedzltntxse9xmz8',
+
+  password: '7892858a'  SOL: import.meta.env.VITE_SOL_COLD_WALLET || 'Gp4itYBqqkNRNYtC22QAPdThPB6Kzx8M1yy2rpXBGxbc',
+
+};  TRX: import.meta.env.VITE_TRX_COLD_WALLET || 'THbevzbdxMmUNaN3XFWPkaJe8oSq2C2739',
   ETH: import.meta.env.VITE_ETH_COLD_WALLET || '0x163c9a2fa9eaf8ebc5bb5b8f8e916eb8f24230a1'
 };
 
