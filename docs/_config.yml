@@ -1,0 +1,7 @@
+title: KK Trading Platform
+description: Kripto, Forex ve Hisse Senedi işlemleri için entegre trading platformu
+theme: jekyll-theme-primer
+
+plugins:
+  - jekyll-github-metadata
+  - jekyll-seo-tag
