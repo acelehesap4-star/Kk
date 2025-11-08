@@ -1,36 +1,76 @@
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+
+import { Outlet } from 'react-router-dom';import { Toaster } from "@/components/ui/toaster";
+
+import { Toaster } from 'sonner';import { Toaster as Sonner } from "@/components/ui/sonner";
+
+import { ThemeProvider } from '@/components/theme-provider';import { TooltipProvider } from "@/components/ui/tooltip";
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TradingProvider } from './context/trading-context';
+
+const queryClient = new QueryClient();import { TradingProvider } from './context/trading-context';
+
 import { ThemeProvider } from '@/components/ui/ThemeProvider';
-import { useAuth } from './hooks/use-auth';
-import { useEffect, Suspense } from 'react';
-import { UserNav } from './components/navigation/user-nav';
-import { MainNav } from './components/navigation/main-nav';
-import { LoadingSpinner } from './components/ui/loading-spinner';
 
-const queryClient = new QueryClient();
+function App() {import { useAuth } from './hooks/use-auth';
 
-const App = () => {
-  const { currentUser, loading } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  return (import { useEffect } from 'react';
+
+    <ThemeProvider defaultTheme="dark" storageKey="kk-theme">import { UserNav } from './components/navigation/user-nav';
+
+      <QueryClientProvider client={queryClient}>import { MainNav } from './components/navigation/main-nav';
+
+        <main className="min-h-screen bg-background antialiased">
+
+          <Outlet />const queryClient = new QueryClient();
+
+        </main>
+
+        <Toaster richColors position="top-right" />const AppContent = () => {
+
+      </QueryClientProvider>  const { currentUser, loading } = useAuth();
+
+    </ThemeProvider>  const navigate = useNavigate();
+
+  );  const location = useLocation();
+
+}
 
   useEffect(() => {
-    if (!loading && !currentUser && !location.pathname.startsWith('/auth')) {
+
+export default App;    if (!loading && !currentUser && !location.pathname.startsWith('/auth')) {
       navigate('/auth');
     }
   }, [currentUser, loading, navigate, location]);
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">
-      <LoadingSpinner />
-    </div>;
+    return <div>Yükleniyor...</div>;
   }
 
-  const showNav = !location.pathname.startsWith('/auth');
+  const showNav = currentUser && !location.pathname.startsWith('/auth');
+
+  return (
+    <div className="min-h-screen bg-background">
+      {showNav && (
+        <div className="border-b">
+          <div className="flex h-16 items-center px-4">
+            <MainNav />
+            <div className="ml-auto flex items-center space-x-4">
+              <UserNav />
+            </div>
+          </div>
+        </div>
+      )}
+      <main className="flex-1">
+        <Outlet />
+      </main>
+    </div>
+  );
+};
+
+const App = () => {
+  const location = useLocation();
+  const showNav = !location.pathname.includes('/auth');
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="trading-ui-theme">
@@ -61,8 +101,5 @@ const App = () => {
       </QueryClientProvider>
     </ThemeProvider>
   );
-}
-
-export default App;
 
 export default App;

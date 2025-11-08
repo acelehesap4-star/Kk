@@ -1,79 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#000000" />
-    <meta name="description" content="KK Trading Platform - Professional Trading Platform" />
-    
-    <!-- Preload critical assets -->
-    <link rel="preload" as="font" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" crossorigin />
-    <link rel="preload" as="font" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" crossorigin />
-
-    <!-- DNS Prefetch -->
-    <link rel="dns-prefetch" href="https://api.binance.com" />
-    <link rel="dns-prefetch" href="https://api.bybit.com" />
-    <link rel="dns-prefetch" href="https://api.kucoin.com" />
-    <link rel="dns-prefetch" href="https://api.huobi.pro" />
-    <link rel="dns-prefetch" href="https://api.okex.com" />
-    <link rel="dns-prefetch" href="https://api.coingecko.com" />
-    <link rel="dns-prefetch" href="https://api.coincap.io" />
-    
-    <!-- Preconnect -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://api.binance.com" crossorigin />
-    <link rel="preconnect" href="https://stream.binance.com" crossorigin />
-    
-    <!-- Fonts -->
-    <link 
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap&font-display=swap" 
-      rel="stylesheet"
-    />
-    
-    <!-- Primary Meta Tags -->
-    <title>KK Trading - Professional Trading Platform</title>
-    <meta name="title" content="KK Trading - Professional Trading Platform" />
-    <meta name="description" content="Advanced trading platform with real-time data, professional charts, and multi-exchange support." />
-    <meta name="keywords" content="trading, forex, stocks, commodities, trading terminal, professional trading" />
-    <meta name="author" content="KK Trading" />
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://kkvalorantgg-hash.github.io/Kk/" />
-    <meta property="og:title" content="KK Trading" />
-    <meta property="og:description" content="Advanced trading platform with real-time data, professional charts, and multi-exchange support." />
-    <meta property="og:image" content="https://kkvalorantgg-hash.github.io/Kk/assets/preview.png" />
-    
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://kkvalorantgg-hash.github.io/Kk/" />
-    <meta property="twitter:title" content="KK Trading" />
-    <meta property="twitter:description" content="Advanced trading platform with real-time data, professional charts, and multi-exchange support." />
-    <meta property="twitter:image" content="https://kkvalorantgg-hash.github.io/Kk/assets/preview.png" />
-
-    <!-- PWA Support -->
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-
-    <!-- SPA Routing Fix for GitHub Pages -->
-    <script type="text/javascript">
-      (function(l) {
-        if (l.search[1] === '/') {
-          var decoded = l.search.slice(1).split('&').map(function(s) { 
-            return s.replace(/~and~/g, '&')
-          }).join('?');
-          window.history.replaceState(null, null,
-            l.pathname.slice(0, -1) + decoded + l.hash
-          );
-        }
-      }(window.location))
-    </script>
+    <title>KK Trading Platform</title>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

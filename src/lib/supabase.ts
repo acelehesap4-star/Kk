@@ -1,10 +1,16 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';import { createClient } from '@supabase/supabase-js';
+
+import type { Database } from '@/types/supabase';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Supabase bağlantısının yapılandırılıp yapılandırılmadığını kontrol et
-const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 // Demo admin credentials
 const DEMO_ADMIN = {
