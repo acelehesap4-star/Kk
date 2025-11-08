@@ -39,6 +39,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
+import { coldWalletSystem } from '@/lib/coldWalletSystem';
 
 interface AdvancedAdminPanelProps {
   user: any;
@@ -48,11 +50,17 @@ const AdvancedAdminPanel: React.FC<AdvancedAdminPanelProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [users, setUsers] = useState<any[]>([]);
   const [tokenRequests, setTokenRequests] = useState<any[]>([]);
+  const [tokenDistributions, setTokenDistributions] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [distributionAmount, setDistributionAmount] = useState(0);
+  const [distributionReason, setDistributionReason] = useState('');
+  const [pendingTransactions, setPendingTransactions] = useState<any[]>([]);
+  const [networkAddresses, setNetworkAddresses] = useState<any>({});
   const [systemStats, setSystemStats] = useState({
     totalUsers: 0,
     activeUsers: 0,
-    totalVolume: 0,
-    totalTokens: 0,
+    totalTokens: 100_000_000_000_000, // 100 Trilyon
+    circulatingSupply: 0,
     pendingRequests: 0,
     systemUptime: 0,
     serverLoad: 0,
@@ -60,6 +68,25 @@ const AdvancedAdminPanel: React.FC<AdvancedAdminPanelProps> = ({ user }) => {
   });
 
   // Load real data from Supabase
+  const handleVerifyTransaction = async (transactionId: string, verified: boolean) => {
+    try {
+      await coldWalletSystem.verifyTransaction(
+        transactionId,
+        user.id,
+        verified,
+        verified ? 'İşlem onaylandı' : 'İşlem reddedildi'
+      );
+      
+      // Listeyi güncelle
+      loadData();
+      
+      toast.success(verified ? 'İşlem onaylandı' : 'İşlem reddedildi');
+    } catch (err) {
+      console.error('İşlem doğrulama hatası:', err);
+      toast.error('İşlem doğrulanırken bir hata oluştu');
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -67,40 +94,49 @@ const AdvancedAdminPanel: React.FC<AdvancedAdminPanelProps> = ({ user }) => {
         const { data: userData, error: userError } = await supabase
           .from('profiles')
           .select('*');
+
+        // Fetch cold wallet data
+        const pendingTxs = await coldWalletSystem.getPendingTransactions();
+        const networkAddrs = await coldWalletSystem.getNetworkAddresses();
+          .from('profiles')
+          .select('*');
         
         if (userError) throw userError;
         setUsers(userData || []);
 
-        // Fetch token requests
-        const { data: tokenData, error: tokenError } = await supabase
-          .from('token_requests')
-          .select('*')
-          .order('created_at', { ascending: false });
+        // Fetch token requests and distributions
+        const [tokenReqResponse, tokenDistResponse] = await Promise.all([
+          supabase
+            .from('token_requests')
+            .select('*')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('coin_distribution_history')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(10)
+        ]);
 
-        if (tokenError) throw tokenError;
-        setTokenRequests(tokenData || []);
+        if (tokenReqResponse.error) throw tokenReqResponse.error;
+        if (tokenDistResponse.error) throw tokenDistResponse.error;
+
+        setTokenRequests(tokenReqResponse.data || []);
+        setTokenDistributions(tokenDistResponse.data || []);
 
         // Calculate system stats
         const activeUsers = userData?.filter(u => u.last_active_at > new Date(Date.now() - 24*60*60*1000).toISOString()).length || 0;
-        
-        const { data: volumeData } = await supabase
-          .from('trading_history')
-          .select('volume')
-          .gte('created_at', new Date(Date.now() - 30*24*60*60*1000).toISOString());
-        
-        const totalVolume = volumeData?.reduce((sum, record) => sum + (record.volume || 0), 0) || 0;
+        const totalCoins = systemStats.totalTokens;
+        const circulatingSupply = tokenDistResponse.data?.reduce((sum, tx) => sum + tx.amount, 0) || 0;
 
-        const { data: tokenStats } = await supabase
-          .from('omni99_stats')
-          .select('total_supply, circulating_supply')
-          .single();
+        const totalCoins = 100_000_000_000_000; // 100 Trilyon
+        const circulatingSupply = tokenDistribution?.reduce((sum, tx) => sum + tx.amount, 0) || 0;
 
         setSystemStats({
           totalUsers: userData?.length || 0,
           activeUsers,
-          totalVolume,
-          totalTokens: tokenStats?.circulating_supply || 0,
-          pendingRequests: tokenData?.filter(t => t.status === 'pending').length || 0,
+          totalTokens: totalCoins,
+          circulatingSupply,
+          pendingRequests: tokenReqResponse.data?.filter(t => t.status === 'pending').length || 0,
           systemUptime: 99.9, // Could be fetched from a monitoring service
           serverLoad: Math.floor(Math.random() * 30) + 20, // Could be fetched from server metrics
           databaseSize: Math.floor(Math.random() * 5) + 1 // Could be fetched from DB stats
@@ -148,6 +184,38 @@ const AdvancedAdminPanel: React.FC<AdvancedAdminPanelProps> = ({ user }) => {
       )
     );
     toast.success('Token purchase rejected!');
+  };
+
+  const handleDistributeCoins = async (userId: string, amount: number, reason: string) => {
+    try {
+      const { error } = await supabase.from('coin_distribution_history').insert([
+        {
+          user_id: userId,
+          amount,
+          transaction_type: 'credit',
+          description: reason,
+          created_at: new Date().toISOString()
+        }
+      ]);
+
+      if (error) throw error;
+
+      // Update user's coin balance
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ coin_balance: supabase.raw('coin_balance + ?', [amount]) })
+        .match({ id: userId });
+
+      if (updateError) throw updateError;
+
+      toast.success('Coin dağıtımı başarıyla gerçekleştirildi');
+      
+      // Refresh data
+      loadData();
+    } catch (err) {
+      toast.error('Coin dağıtımı sırasında bir hata oluştu');
+      console.error(err);
+    }
   };
 
   const handleUserStatusChange = (userId: number, newStatus: string) => {
@@ -212,9 +280,10 @@ const AdvancedAdminPanel: React.FC<AdvancedAdminPanelProps> = ({ user }) => {
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { title: 'Total Users', value: systemStats.totalUsers.toLocaleString(), change: '+12%', icon: Users, color: 'from-blue-500 to-cyan-500' },
-          { title: 'Active Users', value: systemStats.activeUsers.toLocaleString(), change: '+8%', icon: UserCheck, color: 'from-green-500 to-emerald-500' },
-          { title: 'Trading Volume', value: `$${(systemStats.totalVolume / 1000000).toFixed(1)}M`, change: '+23%', icon: TrendingUp, color: 'from-purple-500 to-pink-500' },
+          { title: 'Toplam Üyeler', value: systemStats.totalUsers.toLocaleString(), change: '+12%', icon: Users, color: 'from-blue-500 to-cyan-500' },
+          { title: 'Aktif Üyeler', value: systemStats.activeUsers.toLocaleString(), change: '+8%', icon: UserCheck, color: 'from-green-500 to-emerald-500' },
+          { title: 'Toplam Coin', value: totalCoins.toLocaleString(), icon: Coins, color: 'from-yellow-500 to-amber-500' },
+          { title: 'Dağıtılan Coin', value: circulatingSupply.toLocaleString(), icon: TrendingUp, color: 'from-purple-500 to-pink-500' },
           { title: 'Pending Requests', value: systemStats.pendingRequests.toString(), change: '+5', icon: Clock, color: 'from-orange-500 to-red-500' }
         ].map((stat, index) => (
           <motion.div
@@ -251,6 +320,14 @@ const AdvancedAdminPanel: React.FC<AdvancedAdminPanelProps> = ({ user }) => {
           <TabsTrigger value="tokens" className="data-[state=active]:bg-white/20">
             <Coins className="h-4 w-4 mr-2" />
             Token Requests
+          </TabsTrigger>
+          <TabsTrigger value="coins" className="data-[state=active]:bg-white/20">
+            <Coins className="h-4 w-4 mr-2" />
+            Coin Yönetimi
+          </TabsTrigger>
+          <TabsTrigger value="cold-wallet" className="data-[state=active]:bg-white/20">
+            <Wallet className="h-4 w-4 mr-2" />
+            Soğuk Cüzdan
           </TabsTrigger>
           <TabsTrigger value="system" className="data-[state=active]:bg-white/20">
             <Server className="h-4 w-4 mr-2" />
@@ -485,6 +562,216 @@ const AdvancedAdminPanel: React.FC<AdvancedAdminPanelProps> = ({ user }) => {
                     </div>
                   );
                 })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Coins Tab */}
+        <TabsContent value="coins" className="space-y-6">
+          {/* Coin Overview */}
+          <Card className="bg-black/30 border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <Coins className="h-5 w-5 mr-2 text-yellow-400" />
+                Coin Durumu
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-white/5 rounded-lg">
+                  <p className="text-gray-400 text-sm mb-1">Toplam Arz</p>
+                  <p className="text-2xl font-bold text-white">{systemStats.totalTokens.toLocaleString()}</p>
+                </div>
+                <div className="p-4 bg-white/5 rounded-lg">
+                  <p className="text-gray-400 text-sm mb-1">Dağıtılan</p>
+                  <p className="text-2xl font-bold text-white">{systemStats.circulatingSupply.toLocaleString()}</p>
+                </div>
+                <div className="p-4 bg-white/5 rounded-lg">
+                  <p className="text-gray-400 text-sm mb-1">Kalan</p>
+                  <p className="text-2xl font-bold text-white">{(systemStats.totalTokens - systemStats.circulatingSupply).toLocaleString()}</p>
+                </div>
+                <div className="p-4 bg-white/5 rounded-lg">
+                  <p className="text-gray-400 text-sm mb-1">Dağıtım %</p>
+                  <p className="text-2xl font-bold text-white">{((systemStats.circulatingSupply / systemStats.totalTokens) * 100).toFixed(2)}%</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Distributions */}
+          <Card className="bg-black/30 border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <TrendingUp className="h-5 w-5 mr-2 text-purple-400" />
+                Son Dağıtımlar
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* Coin Dağıtım Formu */}
+              <div className="mb-6 p-4 bg-white/5 rounded-lg border border-white/10">
+                <h3 className="text-white mb-4 font-medium">Manuel Coin Dağıtımı</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">Kullanıcı</label>
+                    <select 
+                      className="w-full px-3 py-2 bg-black/40 border border-white/20 rounded-lg text-white"
+                      onChange={(e) => setSelectedUserId(e.target.value)}
+                    >
+                      <option value="">Kullanıcı seçin</option>
+                      {users.map(user => (
+                        <option key={user.id} value={user.id}>
+                          {user.email}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">Miktar</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 bg-black/40 border border-white/20 rounded-lg text-white"
+                      placeholder="Coin miktarı"
+                      onChange={(e) => setDistributionAmount(Number(e.target.value))}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-gray-400 mb-2">Açıklama</label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 bg-black/40 border border-white/20 rounded-lg text-white"
+                      placeholder="Dağıtım nedeni"
+                      onChange={(e) => setDistributionReason(e.target.value)}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Button
+                      onClick={() => handleDistributeCoins(selectedUserId, distributionAmount, distributionReason)}
+                      disabled={!selectedUserId || !distributionAmount || !distributionReason}
+                      className="w-full"
+                    >
+                      Coin Dağıt
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <h3 className="text-white mb-4 font-medium">Son Dağıtımlar</h3>
+              <div className="space-y-4">
+                {tokenDistributions?.map((dist, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                        <Coins className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">{dist.user_email}</p>
+                        <p className="text-sm text-gray-400">
+                          {dist.amount.toLocaleString()} coin • {new Date(dist.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge className={dist.transaction_type === 'credit' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}>
+                      {dist.transaction_type === 'credit' ? 'Dağıtım' : 'Geri Alım'}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Cold Wallet Tab */}
+        <TabsContent value="cold-wallet" className="space-y-6">
+          <Card className="bg-black/30 border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <Wallet className="h-5 w-5 mr-2 text-blue-400" />
+                Bekleyen İşlemler
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {pendingTransactions?.map((tx, index) => (
+                  <div key={tx.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                        <Wallet className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <p className="font-medium text-white">{tx.userEmail}</p>
+                          <Badge className="bg-blue-500/20 text-blue-400">
+                            {tx.network}
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-gray-400 space-y-1">
+                          <p>Miktar: {tx.amount} {tx.network}</p>
+                          <p>Coin: {tx.coinAmount.toLocaleString()}</p>
+                          <p className="font-mono text-xs">TX: {tx.txHash || 'Bekliyor'}</p>
+                          <p className="font-mono text-xs">Adres: {tx.walletAddress}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col space-y-2">
+                      <Button
+                        size="sm"
+                        className="bg-green-500 text-white hover:bg-green-600"
+                        onClick={() => handleVerifyTransaction(tx.id, true)}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        Onayla
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-red-500 text-white hover:bg-red-600"
+                        onClick={() => handleVerifyTransaction(tx.id, false)}
+                      >
+                        <XCircle className="h-4 w-4 mr-1" />
+                        Reddet
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+
+                {pendingTransactions?.length === 0 && (
+                  <div className="text-center py-8 text-gray-400">
+                    <Wallet className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Bekleyen işlem yok</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Ağ Adresleri */}
+          <Card className="bg-black/30 border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <Globe className="h-5 w-5 mr-2 text-purple-400" />
+                Ağ Adresleri
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(networkAddresses).map(([network, info]) => (
+                  <div key={network} className="p-4 bg-white/5 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <Badge className="bg-purple-500/20 text-purple-400">
+                        {network}
+                      </Badge>
+                      <span className="text-xs text-gray-400">
+                        Min: {info.minAmount} {network}
+                      </span>
+                    </div>
+                    <p className="font-mono text-sm text-white break-all">
+                      {info.address}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-2">
+                      Oran: 1 {network} = {info.coinRate.toLocaleString()} Coin
+                    </p>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>

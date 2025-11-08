@@ -4,21 +4,46 @@ import { supabase } from '@/lib/supabase';
 import { INITIAL_ADMIN } from '@/lib/config/trading';
 import { toast } from 'sonner';
 
+// Kullanıcı tipleri
+export type UserRole = 'admin' | 'user';
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  country: string;
+  role: UserRole;
+  is_verified: boolean;
+  created_at: string;
+  coin_balance: number;
+  last_login: string;
+}
+
 // Form şemaları
 const loginSchema = z.object({
   email: z.string().email('Geçerli bir e-posta adresi girin'),
-  password: z.string().min(6, 'Şifre en az 6 karakter olmalıdır')
+  password: z.string().min(6, 'Şifre en az 6 karakter olmalıdır'),
+  rememberMe: z.boolean().optional()
 });
 
 const registrationSchema = z.object({
   email: z.string().email('Geçerli bir e-posta adresi girin'),
-  password: z.string().min(6, 'Şifre en az 6 karakter olmalıdır'),
+  password: z
+    .string()
+    .min(8, 'Şifre en az 8 karakter olmalıdır')
+    .regex(/[A-Z]/, 'En az bir büyük harf olmalıdır')
+    .regex(/[a-z]/, 'En az bir küçük harf olmalıdır')
+    .regex(/[0-9]/, 'En az bir rakam olmalıdır')
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'En az bir özel karakter olmalıdır'),
   confirmPassword: z.string(),
   firstName: z.string().min(2, 'İsim en az 2 karakter olmalıdır'),
   lastName: z.string().min(2, 'Soyisim en az 2 karakter olmalıdır'),
   phone: z.string().min(10, 'Geçerli bir telefon numarası girin'),
   country: z.string().min(2, 'Ülke seçin'),
-  acceptTerms: z.boolean().refine(val => val === true, 'Kullanım koşullarını kabul etmelisiniz')
+  acceptTerms: z.boolean().refine(val => val === true, 'Kullanım koşullarını kabul etmelisiniz'),
+  walletAddress: z.string().min(30, 'Geçerli bir cüzdan adresi girin').optional()
 }).refine(data => data.password === data.confirmPassword, {
   message: 'Şifreler eşleşmiyor',
   path: ['confirmPassword']
@@ -28,7 +53,8 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const login = async (email: string, password: string) => {
+  const login = async (formData: z.infer<typeof loginSchema>) => {
+    const { email, password, rememberMe } = formData;
     setLoading(true);
     setError(null);
 
@@ -65,10 +91,22 @@ export const useAuth = () => {
       }
 
       // Normal giriş işlemi
+      // Login işlemi
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
+        options: {
+          // Oturum süresini ayarla
+          expiresIn: rememberMe ? '30d' : '1d'
+        }
       });
+
+      // Son giriş tarihini güncelle
+      if (data?.user) {
+        await supabase
+          .from('profiles')
+          .update({ last_login: new Date().toISOString() })
+          .match({ id: data.user.id });
 
       if (error) throw error;
 
@@ -124,7 +162,10 @@ export const useAuth = () => {
           country: formData.country,
           role: 'user',
           is_verified: false,
-          created_at: new Date().toISOString()
+          coin_balance: 0,
+          wallet_address: formData.walletAddress,
+          created_at: new Date().toISOString(),
+          last_login: null
         }
       ]);
 

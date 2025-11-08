@@ -7,10 +7,19 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const TradingTerminal = lazy(() => import('./pages/TradingTerminal'));
 const Wallet = lazy(() => import('./pages/Wallet'));
 const AdminPanel = lazy(() => import('./components/admin/AdminPanel'));
+const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const LegacyTrading = lazy(() => import('./pages/Index'));
 
 const router = createBrowserRouter(
   [
+    {
+      path: '/profile',
+      element: (
+        <Suspense fallback={<LoadingSpinner />}>
+          <UserDashboard />
+        </Suspense>
+      ),
+    },
     {
       path: '/',
       element: (
