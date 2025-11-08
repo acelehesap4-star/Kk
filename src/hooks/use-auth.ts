@@ -52,6 +52,55 @@ const registrationSchema = z.object({
 export const useAuth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    // Mevcut oturum durumunu kontrol et
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) throw error;
+
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profile) {
+            setCurrentUser(profile as UserProfile);
+          }
+        }
+      } catch (err) {
+        console.error('Oturum kontrolü hatası:', err);
+      }
+    };
+
+    checkSession();
+
+    // Oturum değişikliklerini dinle
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile) {
+          setCurrentUser(profile as UserProfile);
+        }
+      } else {
+        setCurrentUser(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const login = async (formData: z.infer<typeof loginSchema>) => {
     const { email, password, rememberMe } = formData;
@@ -217,7 +266,8 @@ export const useAuth = () => {
     logout,
     resetPassword,
     loading,
-    error
+    error,
+    currentUser
   };
 };
 

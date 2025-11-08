@@ -1,8 +1,9 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { LoadingSpinner } from './components/ui/loading-spinner';
+import App from './App';
 
-const App = lazy(() => import('./App'));
+const AuthPage = lazy(() => import('./pages/auth'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const TradingTerminal = lazy(() => import('./pages/TradingTerminal'));
 const Wallet = lazy(() => import('./pages/Wallet'));
@@ -10,16 +11,36 @@ const AdminPanel = lazy(() => import('./components/admin/AdminPanel'));
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const LegacyTrading = lazy(() => import('./pages/Index'));
 
-const router = createBrowserRouter(
+const router = createBrowserRouter([
   [
     {
-      path: '/profile',
-      element: (
-        <Suspense fallback={<LoadingSpinner />}>
-          <UserDashboard />
-        </Suspense>
-      ),
-    },
+      path: '/',
+      element: <App />,
+      children: [
+        {
+          path: '/',
+          element: (
+            <Suspense fallback={<LoadingSpinner />}>
+              <Dashboard />
+            </Suspense>
+          ),
+        },
+        {
+          path: '/auth',
+          element: (
+            <Suspense fallback={<LoadingSpinner />}>
+              <AuthPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: '/profile',
+          element: (
+            <Suspense fallback={<LoadingSpinner />}>
+              <UserDashboard />
+            </Suspense>
+          ),
+        },
     {
       path: '/',
       element: (
