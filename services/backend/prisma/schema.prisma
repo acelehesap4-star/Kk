@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Kullanıcı modeli
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  role          UserRole  @default(USER)
+  isVerified    Boolean   @default(false)
+  kk99Balance   Decimal   @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  wallets       Wallet[]
+  trades        Trade[]
+  deposits      Deposit[]
+  withdrawals   Withdrawal[]
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// Cüzdan modeli
+model Wallet {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  type        WalletType
+  address     String
+  balance     Decimal   @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum WalletType {
+  CRYPTO
+  FOREX
+  STOCKS
+}
+
+// İşlem modeli
+model Trade {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  marketType  MarketType
+  symbol      String
+  type        TradeType
+  amount      Decimal
+  price       Decimal
+  commission  Decimal
+  status      TradeStatus
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum MarketType {
+  CRYPTO
+  FOREX
+  STOCKS
+}
+
+enum TradeType {
+  BUY
+  SELL
+}
+
+enum TradeStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+// Para yatırma modeli
+model Deposit {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  amount      Decimal
+  currency    String
+  txHash      String
+  status      TransactionStatus
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Para çekme modeli
+model Withdrawal {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  amount      Decimal
+  currency    String
+  address     String
+  txHash      String?
+  status      TransactionStatus
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
